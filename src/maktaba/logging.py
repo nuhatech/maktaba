@@ -15,7 +15,7 @@ def get_logger(name: str = "maktaba", level: Optional[str] = None) -> logging.Lo
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     lvl = level or os.getenv("MAKTABA_LOG_LEVEL", "INFO")
-    logger.setLevel(getattr(logging, lvl.upper(), logging.INFO))
+    logger.setLevel(getattr(logging, lvl.upper() if lvl else "INFO", logging.INFO))
     logger.propagate = False
     return logger
 

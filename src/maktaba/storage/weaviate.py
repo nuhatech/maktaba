@@ -91,7 +91,7 @@ class WeaviateStore(BaseVectorStore):
                     "valueText": ns,
                 }
 
-            q = self._client.query.get(self._class_name, ["_additional { id distance }", "text", "namespace"])  # type: ignore
+            q = self._client.query.get(self._class_name, ["_additional { id distance }", "text", "namespace"])
             if where:
                 q = q.with_where(where)
             q = q.with_near_vector(near_vec).with_limit(topK)

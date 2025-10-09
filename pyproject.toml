@@ -98,5 +98,15 @@ ignore = [
 [tool.mypy]
 python_version = "3.10"
 strict = true
-warn_return_any = true
+warn_return_any = false  # Allow Any returns for flexibility with third-party libraries
 warn_unused_configs = true
+
+# Ignore missing imports and type issues from third-party libraries
+[[tool.mypy.overrides]]
+module = [
+    "llama_index.*",
+    "chromadb.*",
+    "qdrant_client.*",
+    "unstructured.*",
+]
+ignore_missing_imports = true

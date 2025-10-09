@@ -17,7 +17,7 @@ class VectorChunk:
     vector: List[float]  # Embedding vector (3072 dims for text-embedding-3-large)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate chunk format."""
         if "#" not in self.id:
             raise ValueError(

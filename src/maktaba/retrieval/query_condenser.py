@@ -49,7 +49,7 @@ class OpenAIQueryCondenser(QueryCondenser):
         # Lazy client init
         self._client = None
         try:
-            from openai import AsyncOpenAI  # type: ignore
+            from openai import AsyncOpenAI
 
             self._OpenAI = AsyncOpenAI
         except Exception:  # pragma: no cover - optional dependency
@@ -100,14 +100,14 @@ class OpenAIQueryCondenser(QueryCondenser):
 
             messages = self._build_messages(history, current_query)
             # Use Chat Completions for broad compatibility
-            resp = await self._client.chat.completions.create(  # type: ignore[attr-defined]
+            resp = await self._client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
                 timeout=self.timeout_s,
             )
             text = (
-                resp.choices[0].message.content  # type: ignore[index]
+                resp.choices[0].message.content
                 if getattr(resp, "choices", None)
                 else None
             )
@@ -141,7 +141,7 @@ class CohereQueryCondenser(QueryCondenser):
         self.timeout_s = timeout_s
         self._logger = get_logger("maktaba.condenser.cohere")
         try:
-            import cohere  # type: ignore
+            import cohere
 
             self._cohere = cohere
         except Exception:  # pragma: no cover - optional dependency
@@ -173,7 +173,7 @@ class CohereQueryCondenser(QueryCondenser):
 
             prompt = self._build_prompts(history, current_query)
             def _call() -> str:
-                client = self._cohere.Client(self.api_key)  # type: ignore[attr-defined]
+                client = self._cohere.Client(self.api_key)
                 resp = client.chat(model=self.model, message=prompt, temperature=self.temperature)
                 # newer cohere clients use .text
                 text = getattr(resp, "text", None) or getattr(resp, "output_text", None)

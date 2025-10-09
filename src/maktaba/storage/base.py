@@ -40,7 +40,7 @@ class BaseVectorStore(ABC):
         self,
         vector: List[float],
         topK: int = 10,  # camelCase to match Agentset/Pinecone
-        filter: Optional[Dict] = None,
+        filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:

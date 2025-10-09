@@ -99,8 +99,8 @@ class QueryPipeline:
             if isinstance(m, tuple):
                 role, content = m
             else:
-                role = m.get("role", "user")  # type: ignore[attr-defined]
-                content = m.get("content", "")  # type: ignore[attr-defined]
+                role = m.get("role", "user")
+                content = m.get("content", "")
             if not isinstance(content, str):
                 content = str(content)
             norm.append((role, content))

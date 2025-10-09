@@ -4,7 +4,7 @@ import os
 from typing import List, Optional
 
 try:
-    import httpx  # type: ignore
+    import httpx
 except Exception:  # pragma: no cover - optional dependency
     httpx = None  # type: ignore
 
@@ -45,7 +45,7 @@ class CohereReranker(BaseReranker):
         if self.use_api:
             try:
                 docs = [r.text or "" for r in results]
-                async with httpx.AsyncClient(timeout=self.timeout_s) as client:  # type: ignore
+                async with httpx.AsyncClient(timeout=self.timeout_s) as client:
                     resp = await client.post(
                         self.base_url,
                         headers={

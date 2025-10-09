@@ -20,8 +20,8 @@ class ChromaStore(BaseVectorStore):
         persist_directory: Optional[str] = None,
     ) -> None:
         try:
-            import chromadb  # type: ignore
-            from chromadb.config import Settings  # type: ignore
+            import chromadb
+            from chromadb.config import Settings
         except Exception as e:  # pragma: no cover
             raise StorageError(
                 "chromadb is not installed. Install with 'maktaba[chroma]'"
