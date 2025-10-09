@@ -1,4 +1,4 @@
-"""Ingestion pipeline: chunk -> embed -> upsert (Agentset-like)."""
+"""Ingestion pipeline: chunk -> embed -> upsert."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class IngestionPipeline:
     """
     End-to-end ingestion: chunk a document, embed chunks, and upsert to the store.
 
-    Mirrors Agentset's ingestion workflow while staying provider-agnostic.
+    Performs document chunking, embedding, and vector store upsert in a provider-agnostic manner.
     """
 
     def __init__(

@@ -25,7 +25,6 @@ class UnstructuredChunker(BaseChunker):
     - Automatic file type detection
     - Page number extraction (for PDFs)
 
-    Matches Agentset's partition-api behavior exactly.
     """
 
     def __init__(

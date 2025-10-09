@@ -16,7 +16,7 @@ async def main():
     print("Document Chunking Example")
     print("=" * 60)
 
-    # Initialize chunker with Agentset defaults
+    # Initialize chunker with defaults
     chunker = UnstructuredChunker(
         strategy="auto",  # auto, fast, hi_res, ocr_only
         chunking_strategy="basic",  # basic, by_title

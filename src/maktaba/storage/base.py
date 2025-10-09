@@ -1,7 +1,7 @@
-"""Base interface for vector stores - Aligned with Agentset (Pinecone-style)."""
+"""Base interface for vector stores - Aligned with Pinecone-style."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ..models import SearchResult, VectorChunk
 
@@ -10,7 +10,7 @@ class BaseVectorStore(ABC):
     """
     Abstract base class for vector storage providers.
 
-    Interface design matches Agentset/Pinecone for compatibility:
+    Interface design matches Pinecone for compatibility:
     - camelCase parameter names (topK, includeMetadata)
     - Namespace support for multi-tenancy
     - Batch operations by default
@@ -39,7 +39,7 @@ class BaseVectorStore(ABC):
     async def query(
         self,
         vector: List[float],
-        topK: int = 10,  # camelCase to match Agentset/Pinecone
+        topK: int = 10,  # camelCase to match Pinecone
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
         namespace: Optional[str] = None,

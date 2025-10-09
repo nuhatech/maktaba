@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Basic usage example for Maktaba - Agentset-aligned RAG library.
+Basic usage example for Maktaba.
 
 This example demonstrates:
-1. Using text-embedding-3-large (Agentset default)
+1. Using text-embedding-3-large (default)
 2. camelCase parameters (topK, includeMetadata)
 3. Chunk ID format: {doc_id}#{chunk_id}
 4. Batch embedding (primary method)
@@ -19,13 +19,13 @@ from maktaba.storage import QdrantStore
 
 
 async def main():
-    # Initialize with Agentset defaults
-    print("🚀 Initializing Maktaba with Agentset-aligned configuration...")
+    # Initialize with defaults
+    print("🚀 Initializing Maktaba configuration...")
 
     # 1. Create embedder with text-embedding-3-large (3072 dimensions)
     embedder = OpenAIEmbedder(
         api_key=os.getenv("OPENAI_API_KEY", "your-api-key-here"),
-        model="text-embedding-3-large",  # Agentset default
+        model="text-embedding-3-large",  # default
     )
 
     print(f"✅ Embedder created: {embedder.model} ({embedder.dimension} dimensions)")
@@ -69,18 +69,18 @@ async def main():
         },
     ]
 
-    # 4. Embed documents in batch (Agentset's primary method)
+    # 4. Embed documents in batch
     print("\n📝 Embedding documents...")
     texts = [doc["text"] for doc in documents]
     embeddings = await embedder.embed_batch(texts, input_type="document")
 
     print(f"✅ Embedded {len(embeddings)} documents")
 
-    # 5. Create VectorChunks with Agentset ID format: {doc_id}#{chunk_id}
+    # 5. Create VectorChunks with ID format: {doc_id}#{chunk_id}
     chunks: List[VectorChunk] = []
     for idx, doc in enumerate(documents):
         chunk = VectorChunk(
-            id=f"{doc['id']}#chunk_0",  # Agentset format!
+            id=f"{doc['id']}#chunk_0",  # Pineconeformat!
             vector=embeddings[idx],
             metadata={
                 "text": doc["text"],
@@ -94,7 +94,7 @@ async def main():
     await store.upsert(chunks)
     print(f"✅ Stored {len(chunks)} chunks")
 
-    # 7. Query with camelCase parameters (Agentset/Pinecone style)
+    # 7. Query with camelCase parameters (Pinecone style)
     print("\n🔍 Searching for 'What is Tawhid?'...")
     query_text = "What is Tawhid?"
 
@@ -130,7 +130,7 @@ async def main():
     print(f"✅ Remaining chunks: {len(remaining_ids)}")
 
     print("\n🎉 Demo completed successfully!")
-    print("\n🔑 Key Agentset alignments demonstrated:")
+    print("\n🔑 Key features demonstrated:")
     print("   ✅ text-embedding-3-large (3072 dims)")
     print("   ✅ camelCase params (topK, includeMetadata)")
     print("   ✅ Chunk ID format: {doc_id}#{chunk_id}")

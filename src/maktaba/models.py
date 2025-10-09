@@ -1,4 +1,4 @@
-"""Core data models for Maktaba - Aligned with Agentset."""
+"""Core data models for Maktaba."""
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
@@ -9,7 +9,7 @@ class VectorChunk:
     """
     Represents a text chunk with its embedding vector.
 
-    ID format matches Agentset: {document_id}#{chunk_id}
+    ID format: {document_id}#{chunk_id}
     Metadata follows LlamaIndex node format for compatibility.
     """
 
@@ -30,7 +30,7 @@ class SearchResult:
     """
     Search result from vector store.
 
-    Matches Agentset's QueryResponse format.
+    Represents a single result from semantic search.
     """
 
     id: str  # Chunk ID
@@ -76,10 +76,10 @@ class SearchResult:
 
 @dataclass
 class EmbeddingConfig:
-    """Configuration for embedding provider - matches Agentset schema."""
+    """Configuration for embedding provider."""
 
     provider: Literal["openai", "azure", "cohere", "voyage", "google"]
-    model: str = "text-embedding-3-large"  # Agentset default
+    model: str = "text-embedding-3-large"  # default
     api_key: str = ""
 
     # Azure-specific fields
@@ -92,7 +92,7 @@ class EmbeddingConfig:
 
     def get_dimension(self) -> int:
         """Get expected dimension for model."""
-        # Match Agentset's modelToDimensions mapping
+        # Model name to embedding dimension mapping
         dimensions = {
             # OpenAI
             "text-embedding-3-large": 3072,
@@ -131,12 +131,12 @@ class PartitionConfig:
     redis_url: Optional[str] = None  # For fetching batched chunks
     redis_password: Optional[str] = None
 
-    # Chunking parameters (match Agentset/Unstructured.io)
+    # Chunking parameters (match Unstructured.io)
     default_strategy: Literal["auto", "fast", "hi_res", "ocr_only"] = "auto"
     default_chunking_strategy: Literal["basic", "by_title"] = "basic"
     default_chunk_size: int = 1000
     default_overlap: int = 200
-    batch_size: int = 30  # Match Agentset default
+    batch_size: int = 30  # Default
 
 
 # Type aliases for clarity

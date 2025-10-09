@@ -13,7 +13,7 @@ from ..storage.base import BaseVectorStore
 
 class QueryPipeline:
     """
-    Feature-complete query pipeline (Agentset-like).
+    Feature-complete query pipeline.
 
     Usage:
         pipeline = QueryPipeline(embedder, store, reranker)

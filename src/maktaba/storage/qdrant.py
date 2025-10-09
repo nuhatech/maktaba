@@ -45,7 +45,7 @@ class QdrantStore(BaseVectorStore):
     """
     Qdrant vector storage implementation.
 
-    Interface matches Agentset/Pinecone for compatibility:
+    Interface matches Pinecone for compatibility:
     - camelCase parameters (topK, includeMetadata)
     - Namespace support via metadata filtering
     - Chunk ID format: {doc_id}#{chunk_id}
@@ -184,7 +184,7 @@ class QdrantStore(BaseVectorStore):
 
         Args:
             vector: Query embedding vector
-            topK: Number of results (camelCase to match Agentset)
+            topK: Number of results (camelCase to match Pinecone)
             filter: Optional metadata filters
             includeMetadata: Whether to include metadata
             namespace: Optional namespace filter
@@ -411,7 +411,7 @@ class QdrantStore(BaseVectorStore):
 
     def create_collection(
         self,
-        dimension: int = 3072,  # Agentset default (text-embedding-3-large)
+        dimension: int = 3072,  # default dimension (text-embedding-3-large)
         distance: Distance = Distance.COSINE,
     ) -> None:
         """

@@ -58,7 +58,7 @@ class OpenAIQueryCondenser(QueryCondenser):
     def _build_messages(self, history: List[Tuple[str, str]], last: str) -> List[dict]:
         # Use up to last N turns from history
         recent = history[-self.max_history :] if self.max_history > 0 else history
-        # Format like Agentset: Human/Assistant lines embedded into a user prompt
+        # Format: Human/Assistant lines embedded into a user prompt
         history_lines = []
         for role, content in recent:
             label = "Human" if role == "user" else "Assistant"

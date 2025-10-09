@@ -1,4 +1,4 @@
-"""OpenAI embedder implementation - Aligned with Agentset defaults."""
+"""OpenAI embedder implementation."""
 
 from typing import List, Literal, Optional
 
@@ -8,9 +8,9 @@ from ..exceptions import EmbeddingError
 from ..models import EmbeddingVector
 from .base import BaseEmbedder
 
-# Supported models and their dimensions (match Agentset exactly)
+# Supported models and their dimensions
 SUPPORTED_MODELS = {
-    "text-embedding-3-large": 3072,  # Agentset default
+    "text-embedding-3-large": 3072,  # Default
     "text-embedding-3-small": 1536,
     "text-embedding-ada-002": 1536,  # Legacy
 }
@@ -21,7 +21,6 @@ class OpenAIEmbedder(BaseEmbedder):
     OpenAI embedding provider.
 
     Default model: text-embedding-3-large (3072 dimensions)
-    This matches Agentset's default configuration.
 
     Example:
         embedder = OpenAIEmbedder(api_key="sk-...")
@@ -31,7 +30,7 @@ class OpenAIEmbedder(BaseEmbedder):
     def __init__(
         self,
         api_key: str,
-        model: str = "text-embedding-3-large",  # Agentset default
+        model: str = "text-embedding-3-large",  # default model
         base_url: Optional[str] = None,
         organization: Optional[str] = None,
     ):

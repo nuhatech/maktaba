@@ -1,4 +1,4 @@
-"""Reranking interfaces - aligned with Agentset."""
+"""Reranking interfaces."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
@@ -10,7 +10,7 @@ class BaseReranker(ABC):
     """
     Abstract reranker interface.
 
-    Aligns with Agentset's concept of post-retrieval reranking.
+    Provides a standard interface for post-retrieval reranking of search results.
     """
 
     @abstractmethod

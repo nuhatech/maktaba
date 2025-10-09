@@ -1,4 +1,4 @@
-"""Base interface for embedding providers - Aligned with Agentset."""
+"""Base interface for embedding providers."""
 
 from abc import ABC, abstractmethod
 from typing import List, Literal
@@ -10,7 +10,7 @@ class BaseEmbedder(ABC):
     """
     Abstract base class for text embedding providers.
 
-    Design principles (matching Agentset):
+    Design principles:
     1. Batch-first: embed_batch is the primary method
     2. Input types: Support 'document' vs 'query' for Voyage AI
     3. Async-first: All methods are async
