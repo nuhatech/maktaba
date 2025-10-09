@@ -2,7 +2,7 @@
 
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import httpx
 
@@ -31,7 +31,7 @@ class UnstructuredChunker(BaseChunker):
         self,
         strategy: Literal["auto", "fast", "hi_res", "ocr_only"] = "auto",
         chunking_strategy: Literal["basic", "by_title"] = "basic",
-        allowed_metadata_types: tuple = (str, int, float, list, dict, type(None)),
+        allowed_metadata_types: Tuple[type, ...] = (str, int, float, list, dict, type(None)),
     ):
         """
         Initialize UnstructuredChunker.
@@ -323,7 +323,7 @@ class UnstructuredChunker(BaseChunker):
         except Exception as e:
             raise ChunkingError(f"Failed to chunk URL: {str(e)}") from e
 
-    def _extract_total_pages(self, documents: list) -> Optional[int]:
+    def _extract_total_pages(self, documents: List[Any]) -> Optional[int]:
         """
         Extract total page count from documents.
 

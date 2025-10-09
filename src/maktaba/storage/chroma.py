@@ -1,6 +1,6 @@
 """ChromaDB vector store implementation (local or client)."""
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ..exceptions import StorageError
 from ..models import SearchResult, VectorChunk
@@ -57,7 +57,7 @@ class ChromaStore(BaseVectorStore):
         self,
         vector: List[float],
         topK: int = 10,
-        filter: Optional[Dict] = None,
+        filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:

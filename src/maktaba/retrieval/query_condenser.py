@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..logging import get_logger
 
@@ -55,7 +55,7 @@ class OpenAIQueryCondenser(QueryCondenser):
         except Exception:  # pragma: no cover - optional dependency
             self._OpenAI = None  # type: ignore
 
-    def _build_messages(self, history: List[Tuple[str, str]], last: str) -> List[dict]:
+    def _build_messages(self, history: List[Tuple[str, str]], last: str) -> List[Dict[str, Any]]:
         # Use up to last N turns from history
         recent = history[-self.max_history :] if self.max_history > 0 else history
         # Format: Human/Assistant lines embedded into a user prompt
@@ -96,7 +96,9 @@ class OpenAIQueryCondenser(QueryCondenser):
 
         try:
             if self._client is None:
-                self._client = self._OpenAI(api_key=self.api_key)  # type: ignore
+                if self._OpenAI is None:
+                    return current_query
+                self._client = self._OpenAI(api_key=self.api_key)
 
             messages = self._build_messages(history, current_query)
             # Use Chat Completions for broad compatibility

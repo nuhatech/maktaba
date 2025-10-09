@@ -1,6 +1,6 @@
 """Query pipeline that ties together embedder, store, reranker, and citations."""
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..citation.formatter import format_with_citations
 from ..embedding.base import BaseEmbedder
@@ -41,7 +41,7 @@ class QueryPipeline:
         rerank: bool = True,
         top_k: Optional[int] = None,
         namespace: Optional[str] = None,
-        filter: Optional[Dict] = None,
+        filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
     ) -> Dict[str, object]:
         k = top_k or self.default_top_k
@@ -85,7 +85,7 @@ class QueryPipeline:
         rerank: bool = True,
         top_k: Optional[int] = None,
         namespace: Optional[str] = None,
-        filter: Optional[Dict] = None,
+        filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
         condenser: Optional[QueryCondenser] = None,
         max_history: int = 10,

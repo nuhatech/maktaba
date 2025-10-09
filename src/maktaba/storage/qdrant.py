@@ -1,7 +1,7 @@
 """Qdrant vector store implementation - Pinecone-compatible interface."""
 
 import uuid
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -175,7 +175,7 @@ class QdrantStore(BaseVectorStore):
         self,
         vector: List[float],
         topK: int = 10,  # camelCase!
-        filter: Optional[Dict] = None,
+        filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:
