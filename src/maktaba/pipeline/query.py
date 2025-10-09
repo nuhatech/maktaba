@@ -1,14 +1,14 @@
 """Query pipeline that ties together embedder, store, reranker, and citations."""
 
 from typing import Dict, List, Optional, Tuple, Union
-from ..logging import get_logger
-from ..retrieval.query_condenser import AutoQueryCondenser, QueryCondenser
 
-from ..embedding.base import BaseEmbedder
-from ..reranking.base import BaseReranker
-from ..storage.base import BaseVectorStore
-from ..models import SearchResult
 from ..citation.formatter import format_with_citations
+from ..embedding.base import BaseEmbedder
+from ..logging import get_logger
+from ..models import SearchResult
+from ..reranking.base import BaseReranker
+from ..retrieval.query_condenser import AutoQueryCondenser, QueryCondenser
+from ..storage.base import BaseVectorStore
 
 
 class QueryPipeline:

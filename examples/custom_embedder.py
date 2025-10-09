@@ -2,9 +2,9 @@ import asyncio
 from typing import List
 
 from maktaba.embedding.base import BaseEmbedder
-from maktaba.storage.qdrant import QdrantStore
-from maktaba.pipeline.query import QueryPipeline
 from maktaba.models import VectorChunk
+from maktaba.pipeline.query import QueryPipeline
+from maktaba.storage.qdrant import QdrantStore
 
 
 class SimpleEmbedder(BaseEmbedder):

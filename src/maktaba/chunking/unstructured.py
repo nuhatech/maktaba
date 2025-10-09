@@ -126,7 +126,7 @@ class UnstructuredChunker(BaseChunker):
                 metadata=ChunkMetadata(
                     filename=filename,
                     filetype=content_type,
-                    sizeInBytes=size_in_bytes,
+                    size_in_bytes=size_in_bytes,
                 ),
                 total_chunks=total_chunks,
                 total_characters=total_characters,
@@ -215,7 +215,7 @@ class UnstructuredChunker(BaseChunker):
                 metadata=ChunkMetadata(
                     filename=path.name,
                     filetype=content_type,
-                    sizeInBytes=size_in_bytes,
+                    size_in_bytes=size_in_bytes,
                 ),
                 total_chunks=total_chunks,
                 total_characters=total_characters,
@@ -309,7 +309,7 @@ class UnstructuredChunker(BaseChunker):
                 metadata=ChunkMetadata(
                     filename=filename,
                     filetype=content_type,
-                    sizeInBytes=size_in_bytes,
+                    size_in_bytes=size_in_bytes,
                 ),
                 total_chunks=total_chunks,
                 total_characters=total_characters,

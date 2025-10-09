@@ -1,13 +1,12 @@
-import asyncio
 from typing import List
 
 import pytest
 
-from maktaba.models import SearchResult
 from maktaba.embedding.base import BaseEmbedder
-from maktaba.storage.base import BaseVectorStore
+from maktaba.models import SearchResult
 from maktaba.pipeline.query import QueryPipeline
 from maktaba.reranking.cohere import CohereReranker
+from maktaba.storage.base import BaseVectorStore
 
 
 class DummyEmbedder(BaseEmbedder):

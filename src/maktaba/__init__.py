@@ -9,7 +9,7 @@ from .exceptions import (
     ChunkingError,
     ConfigurationError,
     EmbeddingError,
-    MaktabaException,
+    MaktabaError,
     PartitionAPIError,
     StorageError,
 )
@@ -25,7 +25,7 @@ __version__ = "0.1.0"
 
 __all__ = [
     # Exceptions
-    "MaktabaException",
+    "MaktabaError",
     "EmbeddingError",
     "StorageError",
     "ChunkingError",

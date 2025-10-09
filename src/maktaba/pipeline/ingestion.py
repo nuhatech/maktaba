@@ -8,10 +8,9 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from ..chunking.base import BaseChunker
 from ..embedding.base import BaseEmbedder
+from ..logging import get_logger
 from ..models import VectorChunk
 from ..storage.base import BaseVectorStore
-from ..logging import get_logger
-
 
 ProgressCallback = Callable[[Dict[str, Any]], None]
 

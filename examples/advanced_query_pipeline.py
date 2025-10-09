@@ -2,10 +2,10 @@ import asyncio
 import os
 
 from maktaba.embedding import OpenAIEmbedder
-from maktaba.storage.qdrant import QdrantStore
+from maktaba.models import VectorChunk
 from maktaba.pipeline.query import QueryPipeline
 from maktaba.reranking.cohere import CohereReranker
-from maktaba.models import VectorChunk
+from maktaba.storage.qdrant import QdrantStore
 
 
 async def main():

@@ -48,7 +48,7 @@ async def main():
     print(f"✓ Created {result.total_chunks} chunk(s)")
     print(f"✓ Total characters: {result.total_characters}")
     print(f"✓ File type: {result.metadata.filetype}")
-    print(f"✓ Size: {result.metadata.sizeInBytes} bytes")
+    print(f"✓ Size: {result.metadata.size_in_bytes} bytes")
 
     print("\nFirst chunk:")
     print(f"  Text: {result.documents[0].text[:100]}...")
@@ -94,7 +94,7 @@ async def main():
         print(f"✓ Created {result.total_chunks} chunk(s)")
         print(f"✓ File type: {result.metadata.filetype}")
         print(f"✓ Total pages: {result.total_pages or 'N/A'}")
-        print(f"✓ Size: {result.metadata.sizeInBytes} bytes")
+        print(f"✓ Size: {result.metadata.size_in_bytes} bytes")
 
     except Exception as e:
         print(f"✗ Failed to chunk URL: {e}")
@@ -114,8 +114,8 @@ async def main():
     )
 
     print(f"✓ Created {result.total_chunks} chunk(s)")
-    print(f"✓ Strategy: hi_res")
-    print(f"✓ Chunking: by_title")
+    print("✓ Strategy: hi_res")
+    print("✓ Chunking: by_title")
 
     print("\n" + "=" * 60)
     print("✓ All examples completed successfully!")

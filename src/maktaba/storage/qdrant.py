@@ -17,7 +17,6 @@ from ..exceptions import StorageError
 from ..models import SearchResult, VectorChunk
 from .base import BaseVectorStore
 
-
 # UUID namespace for generating deterministic UUIDs from original IDs
 _MAKTABA_UUID_NAMESPACE = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
 

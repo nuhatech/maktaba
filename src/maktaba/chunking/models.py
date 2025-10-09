@@ -18,7 +18,7 @@ class ChunkMetadata:
     filetype: str
     """MIME type (e.g., 'application/pdf')"""
 
-    sizeInBytes: int  # camelCase to match Agentset
+    size_in_bytes: int
     """File size in bytes"""
 
 
@@ -56,7 +56,7 @@ class ChunkResult:
             "metadata": {
                 "filename": self.metadata.filename,
                 "filetype": self.metadata.filetype,
-                "sizeInBytes": self.metadata.sizeInBytes,
+                "sizeInBytes": self.metadata.size_in_bytes,
             },
             "total_chunks": self.total_chunks,
             "total_characters": self.total_characters,

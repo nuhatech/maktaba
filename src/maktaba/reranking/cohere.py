@@ -1,15 +1,15 @@
 """Cohere-based reranker with offline fallback."""
 
-from typing import List, Optional
 import os
+from typing import List, Optional
 
 try:
     import httpx  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     httpx = None  # type: ignore
 
-from .base import BaseReranker
 from ..models import SearchResult
+from .base import BaseReranker
 
 
 class CohereReranker(BaseReranker):

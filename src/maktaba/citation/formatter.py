@@ -1,6 +1,6 @@
 """Citation formatter for search results."""
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from ..models import SearchResult
 

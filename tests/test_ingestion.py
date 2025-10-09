@@ -1,13 +1,13 @@
-import pytest
-
 from typing import Any, Dict, List, Optional
 
+import pytest
+
+from maktaba.chunking.base import BaseChunker
+from maktaba.embedding.base import BaseEmbedder
+from maktaba.models import SearchResult, VectorChunk
 from maktaba.pipeline.ingestion import IngestionPipeline
 from maktaba.pipeline.query import QueryPipeline
-from maktaba.embedding.base import BaseEmbedder
 from maktaba.storage.base import BaseVectorStore
-from maktaba.chunking.base import BaseChunker
-from maktaba.models import SearchResult, VectorChunk
 
 
 class DummyDoc:
@@ -23,11 +23,11 @@ class DummyChunker(BaseChunker):
     async def chunk_text(self, text: str, filename: str = "doc.txt", extra_metadata=None, **kwargs):
         parts = [p.strip() for p in text.split(".") if p.strip()]
         docs = [DummyDoc(p + ".", (extra_metadata or {})) for p in parts]
-        from maktaba.chunking.models import ChunkResult, ChunkMetadata
+        from maktaba.chunking.models import ChunkMetadata, ChunkResult
 
         return ChunkResult(
             documents=docs,
-            metadata=ChunkMetadata(filename=filename, filetype="text/plain", sizeInBytes=len(text)),
+            metadata=ChunkMetadata(filename=filename, filetype="text/plain", size_in_bytes=len(text)),
             total_chunks=len(docs),
             total_characters=len(text),
         )
