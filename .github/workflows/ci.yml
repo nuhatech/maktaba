@@ -28,6 +28,14 @@ jobs:
         run: |
           uv sync --dev --all-extras
 
+      - name: Lint with ruff
+        run: |
+          uv run ruff check .
+
+      - name: Type check with mypy
+        run: |
+          uv run mypy src/maktaba
+
       - name: Run tests
         env:
           PYTHONPATH: src

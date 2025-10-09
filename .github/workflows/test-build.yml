@@ -1,0 +1,42 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Verify package builds
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Build package
+        run: |
+          uv build
+
+      - name: Check build artifacts
+        run: |
+          ls -lh dist/
+          echo "Build artifacts created successfully"
+
+      - name: Install from wheel
+        run: |
+          python -m venv .test-venv
+          .test-venv/bin/pip install dist/*.whl
+
+      - name: Test import
+        run: |
+          .test-venv/bin/python -c "import maktaba; print(f'Successfully imported maktaba {maktaba.__version__}')"
