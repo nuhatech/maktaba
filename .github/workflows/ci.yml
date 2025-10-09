@@ -25,12 +25,10 @@ jobs:
           pip install uv
 
       - name: Sync dependencies
-        working-directory: maktaba
         run: |
           uv sync --dev
 
       - name: Run tests
-        working-directory: maktaba
         env:
           PYTHONPATH: src
         run: |
