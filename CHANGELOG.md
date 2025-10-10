@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed error: "value book_XXX#chunk_X is not a valid point ID" when using Qdrant server mode
 - Query results now return original string IDs (e.g., `book_123#chunk_0`) instead of internal UUIDs
 - Migrated from deprecated `search()` to modern `query_points()` API
+- **CI Build Fix:** Pinned `chromadb<1.1` to avoid dependency resolution failure with non-existent `mdurl==0.1.3`
 
 ### Added
 - Comprehensive QdrantStore integration tests covering string ID handling, namespaces, and document deletion
