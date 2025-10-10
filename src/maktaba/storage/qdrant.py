@@ -109,7 +109,7 @@ class QdrantStore(BaseVectorStore):
                 api_key=api_key,
                 timeout=timeout,
             )
-            self._use_uuid = False  # Server mode accepts string IDs
+            self._use_uuid = True  # Server mode also requires UUIDs (or unsigned integers)
         else:
             raise ValueError(
                 "Either 'url' or 'location' must be provided. "
@@ -220,21 +220,27 @@ class QdrantStore(BaseVectorStore):
                 if conditions:
                     qdrant_filter = Filter(must=conditions)
 
-            # Search
-            results = self.client.search(
+            # Query (using modern query_points API)
+            response = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=vector,
+                query=vector,
                 limit=topK,
                 query_filter=qdrant_filter,
                 with_payload=includeMetadata,
             )
+            results = response.points
 
             # Convert to SearchResult
             search_results = []
             for result in results:
+                # Return original ID from metadata if available (UUID mode)
+                result_id = str(result.id)
+                if self._use_uuid and result.payload:
+                    result_id = result.payload.get("_original_id", result_id)
+
                 search_results.append(
                     SearchResult(
-                        id=str(result.id),
+                        id=result_id,
                         score=result.score,
                         metadata=result.payload if includeMetadata else {},
                     )
@@ -255,6 +261,9 @@ class QdrantStore(BaseVectorStore):
             return
 
         try:
+            # Convert original IDs to UUIDs if in UUID mode
+            delete_ids = [_original_id_to_uuid(id) for id in ids] if self._use_uuid else ids
+
             # If namespace is provided, filter by namespace
             if namespace:
                 self.client.delete(
@@ -267,7 +276,7 @@ class QdrantStore(BaseVectorStore):
                             ),
                             FieldCondition(
                                 key="id",
-                                match=MatchValue(value=ids),
+                                match=MatchValue(value=delete_ids),
                             ),
                         ]
                     ),
@@ -276,7 +285,7 @@ class QdrantStore(BaseVectorStore):
                 # Direct ID deletion
                 self.client.delete(
                     collection_name=self.collection_name,
-                    points_selector=ids,
+                    points_selector=delete_ids,
                 )
 
         except Exception as e:
@@ -326,12 +335,13 @@ class QdrantStore(BaseVectorStore):
                 for point in points:
                     point_id = str(point.id)
 
-                    # Check using _original_id metadata (in-memory/local mode)
+                    # Check using _original_id metadata (UUID mode)
                     if self._use_uuid and point.payload:
                         original_id = point.payload.get("_original_id", "")
                         if original_id.startswith(f"{document_id}#"):
-                            chunk_ids.append(point_id)
-                    # Direct ID prefix match (server mode)
+                            # Append original ID (delete method will convert to UUID)
+                            chunk_ids.append(original_id)
+                    # Direct ID prefix match (non-UUID mode - should not happen now)
                     elif point_id.startswith(f"{document_id}#"):
                         chunk_ids.append(point_id)
 
