@@ -76,6 +76,29 @@ print(result["formatted_context"])  # [1]: content... [2]: content...
 print(result["citations"])          # [{id: 1, source: "...", score: 0.95}, ...]
 ```
 
+## Development
+
+### Running Checks Before Push
+
+Before pushing to the remote repository, run all quality checks:
+
+**Linux/Mac/Git Bash:**
+```bash
+./scripts/check.sh
+```
+
+**Windows CMD:**
+```cmd
+scripts\check.bat
+```
+
+This will run:
+- Ruff linting
+- MyPy type checking
+- Pytest tests
+
+All checks must pass before pushing.
+
 ## Documentation
 
 - Overview: docs/Overview.md

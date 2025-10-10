@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Initial project setup
+## [0.1.1] - 2025-10-10
 
-## [0.1.0] - YYYY-MM-DD
+### Added
+- ZeroEntropy Zerank reranker support via `ZerankReranker` class
+- New optional dependency group: `zeroentropy`
+- Async reranking with graceful fallback to heuristic scoring
+- Comprehensive test coverage for Zerank reranker
+
+## [0.1.0] - 2025-10-09
 
 ### Added
 - Query pipeline with automatic reranking and citation formatting
@@ -29,5 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0

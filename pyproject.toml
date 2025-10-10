@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.0"
+version = "0.1.1"
 description = "Production-ready RAG infrastructure for Arabic & multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -31,6 +31,7 @@ openai = ["openai>=1.0"]
 azure = ["azure-ai-inference>=1.0.0b9"]
 cohere = ["cohere>=5.0"]
 voyage = ["voyageai>=0.2"]
+zeroentropy = ["zeroentropy>=0.1.0a6"]
 qdrant = ["qdrant-client>=1.11"]
 pinecone = ["pinecone-client>=3.0"]
 chroma = ["chromadb>=0.4"]
@@ -47,6 +48,7 @@ all = [
     "azure-ai-inference>=1.0.0b9",
     "cohere>=5.0",
     "voyageai>=0.2",
+    "zeroentropy>=0.1.0a6",
     "qdrant-client>=1.11",
     "pinecone-client>=3.0",
     "chromadb>=0.4",
@@ -108,5 +110,6 @@ module = [
     "chromadb.*",
     "qdrant_client.*",
     "unstructured.*",
+    "zeroentropy.*",
 ]
 ignore_missing_imports = true
