@@ -1,7 +1,7 @@
 [project]
 name = "maktaba"
-version = "0.1.2"
-description = "Production-ready RAG infrastructure for Arabic & multilingual applications"
+version = "0.1.3"
+description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
 ]
@@ -34,7 +34,7 @@ voyage = ["voyageai>=0.2"]
 zeroentropy = ["zeroentropy>=0.1.0a6"]
 qdrant = ["qdrant-client>=1.11"]
 pinecone = ["pinecone-client>=3.0"]
-chroma = ["chromadb>=0.4"]
+chroma = ["chromadb>=0.4,<1.1"]
 redis = ["redis>=5.0"]
 unstructured = [
     "llama-index-core>=0.12",
@@ -51,7 +51,7 @@ all = [
     "zeroentropy>=0.1.0a6",
     "qdrant-client>=1.11",
     "pinecone-client>=3.0",
-    "chromadb>=0.4",
+    "chromadb>=0.4,<1.1",
     "redis>=5.0",
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
