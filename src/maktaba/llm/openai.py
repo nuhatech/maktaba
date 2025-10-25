@@ -1,7 +1,7 @@
 """OpenAI LLM implementation for agentic query generation and evaluation."""
 
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from ..logging import get_logger
 from ..models import LLMUsage

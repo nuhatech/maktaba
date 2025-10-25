@@ -46,6 +46,7 @@ class QdrantKeywordStore(BaseKeywordStore):
         api_key: Optional[str] = None,
         timeout: int = 60,
         location: Optional[str] = None,
+        client: Optional[QdrantClient] = None,
     ):
         """
         Initialize Qdrant keyword store.
@@ -57,13 +58,20 @@ class QdrantKeywordStore(BaseKeywordStore):
             api_key: Optional API key for Qdrant Cloud
             timeout: Request timeout in seconds
             location: Alternative to url. Use ":memory:" or path for local storage
+            client: Optional existing QdrantClient instance to reuse (for sharing with QdrantStore)
 
         Note:
             The text_field must be indexed for full-text search in Qdrant.
             This is typically configured when creating the collection.
+
+            If `client` is provided, it will be used instead of creating a new one.
+            This is useful for sharing the same Qdrant instance between QdrantStore and QdrantKeywordStore.
         """
-        # Initialize Qdrant client (same logic as QdrantStore)
-        if url == ":memory:":
+        # Use provided client if available
+        if client is not None:
+            self.client = client
+        # Otherwise initialize Qdrant client (same logic as QdrantStore)
+        elif url == ":memory:":
             self.client = QdrantClient(location=":memory:")
         elif location:
             self.client = QdrantClient(location=location)
@@ -75,7 +83,7 @@ class QdrantKeywordStore(BaseKeywordStore):
             )
         else:
             raise ValueError(
-                "Either 'url' or 'location' must be provided. "
+                "Either 'url', 'location', or 'client' must be provided. "
                 "Use url=':memory:' for in-memory mode or url='http://localhost:6333' for server mode."
             )
 

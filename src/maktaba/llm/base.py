@@ -1,7 +1,7 @@
 """Base LLM interface for agentic query generation and evaluation."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from ..models import LLMUsage
 

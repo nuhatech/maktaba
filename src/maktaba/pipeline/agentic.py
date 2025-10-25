@@ -9,7 +9,7 @@ from ..keyword.base import BaseKeywordStore
 from ..llm.base import BaseLLM
 from ..llm.openai import OpenAILLM
 from ..logging import get_logger
-from ..models import SearchResult, LLMUsage
+from ..models import LLMUsage, SearchResult
 from ..reranking.base import BaseReranker
 from ..storage.base import BaseVectorStore
 
@@ -216,9 +216,9 @@ class AgenticQueryPipeline:
         iterations_done = 0
         total_usage = LLMUsage()  # Precise token tracking
 
-        # Add first user message as initial query
+        # Get last user message for iteration 0
+        # Don't add to queries_used yet - let iteration 0 add it when executing
         last_user_msg = next((c for r, c in reversed(norm) if r == "user"), norm[-1][1])
-        queries_used.append(last_user_msg)
 
         # Iterative search loop
         for iteration in range(max_iterations):
@@ -252,10 +252,14 @@ class AgenticQueryPipeline:
                 break
 
             # Filter out duplicate queries and prepare for parallel execution
-            new_queries = [
-                q for q in generated_queries
-                if q.get("query") and q.get("query") not in queries_used
-            ]
+            # Track queries seen in this batch to avoid duplicates within generated_queries
+            seen_in_batch = set()
+            new_queries = []
+            for q in generated_queries:
+                query_text = q.get("query")
+                if query_text and query_text not in queries_used and query_text not in seen_in_batch:
+                    new_queries.append(q)
+                    seen_in_batch.add(query_text)
 
             if not new_queries:
                 self._logger.info(f"agentic_search.iter_{iteration}: all queries are duplicates, stopping")
