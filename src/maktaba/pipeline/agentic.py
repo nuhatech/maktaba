@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..citation.formatter import format_with_citations
 from ..embedding.base import BaseEmbedder
+from ..keyword.base import BaseKeywordStore
 from ..llm.base import BaseLLM
 from ..llm.openai import OpenAILLM
 from ..logging import get_logger
@@ -35,6 +36,7 @@ class AgenticQueryPipeline:
         embedder: BaseEmbedder,
         store: BaseVectorStore,
         reranker: Optional[BaseReranker] = None,
+        keyword_store: Optional[BaseKeywordStore] = None,
         llm: Optional[BaseLLM] = None,
         llm_api_key: Optional[str] = None,
         llm_model: str = "gpt-4o-mini",
@@ -47,6 +49,7 @@ class AgenticQueryPipeline:
             embedder: Embedding model for vector search
             store: Vector store for retrieval
             reranker: Optional reranker for result refinement
+            keyword_store: Optional keyword search store for full-text search
             llm: LLM for query generation/evaluation (defaults to OpenAI)
             llm_api_key: API key for LLM (if not using default)
             llm_model: LLM model name
@@ -55,6 +58,7 @@ class AgenticQueryPipeline:
         self.embedder = embedder
         self.store = store
         self.reranker = reranker
+        self.keyword_store = keyword_store
         self.namespace = namespace
         self._logger = get_logger("maktaba.pipeline.agentic")
 
@@ -70,40 +74,72 @@ class AgenticQueryPipeline:
         query_type: str,
         top_k: int,
         rerank_limit: int,
+        keyword_limit: int,
         min_score: Optional[float],
         namespace: Optional[str],
         filter: Optional[Dict[str, Any]],
         includeMetadata: bool,
     ) -> List[SearchResult]:
         """
-        Execute a single query (semantic search).
+        Execute a single query (semantic or keyword search).
 
-        Returns list of SearchResult objects.
-        Handles errors gracefully by returning empty list.
+        Args:
+            query_text: Query string
+            query_type: "semantic" or "keyword"
+            top_k: Number of results for semantic search
+            rerank_limit: Number of results after reranking semantic results
+            keyword_limit: Number of results for keyword search
+            min_score: Minimum score threshold (for semantic search)
+            namespace: Search namespace
+            filter: Metadata filters
+            includeMetadata: Include metadata in results
+
+        Returns:
+            List of SearchResult objects.
+            Handles errors gracefully by returning empty list.
         """
         try:
-            # Embed and retrieve
-            qvec = await self.embedder.embed_text(query_text, input_type="query")
+            # Route based on query type
+            if query_type == "keyword":
+                # Keyword search (full-text)
+                if self.keyword_store is None:
+                    self._logger.warning(
+                        f"Keyword query requested but no keyword_store available: '{query_text[:50]}...'"
+                    )
+                    return []
 
-            results: List[SearchResult] = await self.store.query(
-                vector=qvec,
-                topK=top_k,
-                filter=filter,
-                includeMetadata=includeMetadata,
-                namespace=namespace,
-            )
+                results: List[SearchResult] = await self.keyword_store.search(
+                    query=query_text,
+                    limit=keyword_limit,
+                    filter=filter,
+                    namespace=namespace,
+                )
 
-            # Apply min_score filter
-            if min_score is not None:
-                results = [r for r in results if r.score is not None and r.score >= min_score]
+                return results
 
-            # Rerank if available
-            if self.reranker is not None:
-                results = await self.reranker.rerank(query_text, results, top_k=rerank_limit)
             else:
-                results = results[:rerank_limit]
+                # Semantic search (vector)
+                qvec = await self.embedder.embed_text(query_text, input_type="query")
 
-            return results
+                results: List[SearchResult] = await self.store.query(
+                    vector=qvec,
+                    topK=top_k,
+                    filter=filter,
+                    includeMetadata=includeMetadata,
+                    namespace=namespace,
+                )
+
+                # Apply min_score filter
+                if min_score is not None:
+                    results = [r for r in results if r.score is not None and r.score >= min_score]
+
+                # Rerank if available
+                if self.reranker is not None:
+                    results = await self.reranker.rerank(query_text, results, top_k=rerank_limit)
+                else:
+                    results = results[:rerank_limit]
+
+                return results
 
         except Exception as e:
             self._logger.error(f"Query execution failed for '{query_text[:50]}...': {e}", exc_info=True)
@@ -235,6 +271,7 @@ class AgenticQueryPipeline:
                     query_type=q.get("type", "semantic"),
                     top_k=top_k,
                     rerank_limit=rerank_limit,
+                    keyword_limit=keyword_limit,
                     min_score=min_score,
                     namespace=ns,
                     filter=filter,
