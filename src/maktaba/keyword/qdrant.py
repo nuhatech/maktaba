@@ -1,6 +1,6 @@
 """Qdrant keyword search implementation using full-text match."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, cast
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchText, MatchValue
@@ -154,7 +154,7 @@ class QdrantKeywordStore(BaseKeywordStore):
                         )
 
             # Create Qdrant filter
-            qdrant_filter = Filter(must=conditions) if conditions else None
+            qdrant_filter = Filter(must=cast(Sequence[Any], conditions)) if conditions else None
 
             # Perform scroll to get matching documents
             # Note: Qdrant's full-text search doesn't support direct scoring via query_points

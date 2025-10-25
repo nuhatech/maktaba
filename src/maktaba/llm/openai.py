@@ -1,7 +1,7 @@
 """OpenAI LLM implementation for agentic query generation and evaluation."""
 
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..logging import get_logger
 from ..models import LLMUsage
@@ -57,16 +57,16 @@ class OpenAILLM(BaseLLM):
         self._logger = get_logger("maktaba.llm.openai")
 
         # Lazy client initialization
-        self._client = None
+        self._client: Optional[Any] = None
+        self._OpenAI: Optional[type[Any]] = None
         try:
             from openai import AsyncOpenAI
 
-            self._OpenAI = AsyncOpenAI
+            self._OpenAI = AsyncOpenAI  # type: ignore[assignment]
         except ImportError:  # pragma: no cover
-            self._OpenAI = None
             self._logger.warning("openai package not installed; agentic mode unavailable")
 
-    def _get_client(self):
+    def _get_client(self) -> Optional[Any]:
         """Lazy initialize OpenAI client."""
         if self._client is None and self._OpenAI is not None:
             self._client = self._OpenAI(api_key=self.api_key, timeout=self.timeout_s)

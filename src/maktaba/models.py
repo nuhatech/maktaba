@@ -34,7 +34,7 @@ class SearchResult:
     """
 
     id: str  # Chunk ID
-    score: float  # Similarity score (0.0 - 1.0)
+    score: Optional[float] = None  # Similarity score (0.0 - 1.0), None for keyword search
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property

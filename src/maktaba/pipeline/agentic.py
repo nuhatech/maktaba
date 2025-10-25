@@ -121,7 +121,7 @@ class AgenticQueryPipeline:
                 # Semantic search (vector)
                 qvec = await self.embedder.embed_text(query_text, input_type="query")
 
-                results: List[SearchResult] = await self.store.query(
+                semantic_results: List[SearchResult] = await self.store.query(
                     vector=qvec,
                     topK=top_k,
                     filter=filter,
@@ -131,15 +131,15 @@ class AgenticQueryPipeline:
 
                 # Apply min_score filter
                 if min_score is not None:
-                    results = [r for r in results if r.score is not None and r.score >= min_score]
+                    semantic_results = [r for r in semantic_results if r.score is not None and r.score >= min_score]
 
                 # Rerank if available
                 if self.reranker is not None:
-                    results = await self.reranker.rerank(query_text, results, top_k=rerank_limit)
+                    semantic_results = await self.reranker.rerank(query_text, semantic_results, top_k=rerank_limit)
                 else:
-                    results = results[:rerank_limit]
+                    semantic_results = semantic_results[:rerank_limit]
 
-                return results
+                return semantic_results
 
         except Exception as e:
             self._logger.error(f"Query execution failed for '{query_text[:50]}...': {e}", exc_info=True)
@@ -318,7 +318,7 @@ class AgenticQueryPipeline:
 
             # Evaluate if we have enough information
             if iteration < max_iterations - 1:  # Don't evaluate on last iteration
-                sources_text = [chunk.text for chunk in all_chunks.values()]
+                sources_text = [chunk.text for chunk in all_chunks.values() if chunk.text is not None]
                 can_answer, eval_usage = await self.llm.evaluate_sources(
                     messages=norm,
                     sources=sources_text[:50],  # Limit to avoid huge context

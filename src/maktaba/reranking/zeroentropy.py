@@ -1,7 +1,7 @@
 """ZeroEntropy reranker implementation."""
 
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from ..models import SearchResult
 from .base import BaseReranker
@@ -42,13 +42,14 @@ class ZeroEntropyReranker(BaseReranker):
         self.model = model
 
         # Try to import zeroentropy SDK
+        self._client: Optional[Any] = None
+        self._AsyncZeroEntropy: Optional[type[Any]] = None
         try:
             from zeroentropy import AsyncZeroEntropy
 
-            self._AsyncZeroEntropy = AsyncZeroEntropy
-            self._client = None  # Lazy initialization
+            self._AsyncZeroEntropy = AsyncZeroEntropy  # type: ignore[assignment]
         except Exception:  # pragma: no cover - optional dependency
-            self._AsyncZeroEntropy = None  # type: ignore
+            pass
 
         self.use_api = use_api and bool(self.api_key) and self._AsyncZeroEntropy is not None
 

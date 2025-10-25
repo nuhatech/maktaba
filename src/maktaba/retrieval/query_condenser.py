@@ -47,13 +47,14 @@ class OpenAIQueryCondenser(QueryCondenser):
         self._logger = get_logger("maktaba.condenser.openai")
 
         # Lazy client init
-        self._client = None
+        self._client: Optional[Any] = None
+        self._OpenAI: Optional[type[Any]] = None
         try:
             from openai import AsyncOpenAI
 
-            self._OpenAI = AsyncOpenAI
+            self._OpenAI = AsyncOpenAI  # type: ignore[assignment]
         except Exception:  # pragma: no cover - optional dependency
-            self._OpenAI = None  # type: ignore
+            pass
 
     def _build_messages(self, history: List[Tuple[str, str]], last: str) -> List[Dict[str, Any]]:
         # Use up to last N turns from history

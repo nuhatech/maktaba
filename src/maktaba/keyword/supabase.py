@@ -1,9 +1,13 @@
 """Supabase keyword search implementation using PostgreSQL FTS."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 try:
-    from supabase import Client, create_client
+    from supabase import Client as SyncClient
+    from supabase import create_client as create_sync_client
+
+    Client: Optional[type[Any]] = SyncClient
+    create_client: Optional[Callable[..., Any]] = create_sync_client
 except ImportError:
     Client = None
     create_client = None

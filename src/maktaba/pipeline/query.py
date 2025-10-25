@@ -79,10 +79,11 @@ class QueryPipeline:
         # 5) Format citations
         formatted = format_with_citations(ranked, top_k=k)
         formatted["results"] = ranked
+        citations = formatted.get("citations", [])
         self._logger.info(
             "query.done: formatted_blocks=%d citations=%d",
             len(ranked),
-            len(formatted.get("citations", [])),
+            len(citations) if hasattr(citations, '__len__') else 0,
         )
         return formatted
 
