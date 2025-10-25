@@ -36,6 +36,7 @@ qdrant = ["qdrant-client>=1.11"]
 pinecone = ["pinecone-client>=3.0"]
 chroma = ["chromadb>=0.4,<1.1"]
 redis = ["redis>=5.0"]
+supabase = ["supabase>=2.0"]
 unstructured = [
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
@@ -53,6 +54,7 @@ all = [
     "pinecone-client>=3.0",
     "chromadb>=0.4,<1.1",
     "redis>=5.0",
+    "supabase>=2.0",
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
     "unstructured[all-docs]>=0.16",
@@ -111,5 +113,6 @@ module = [
     "qdrant_client.*",
     "unstructured.*",
     "zeroentropy.*",
+    "supabase.*",
 ]
 ignore_missing_imports = true

@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import FieldCondition, Filter, MatchText, MatchValue
+from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchText, MatchValue
 
 from ..exceptions import StorageError
 from ..models import SearchResult
@@ -129,12 +129,21 @@ class QdrantKeywordStore(BaseKeywordStore):
             # Add custom filters if provided
             if filter:
                 for key, value in filter.items():
-                    conditions.append(
-                        FieldCondition(
-                            key=key,
-                            match=MatchValue(value=value),
+                    # Handle list values with MatchAny, single values with MatchValue
+                    if isinstance(value, list):
+                        conditions.append(
+                            FieldCondition(
+                                key=key,
+                                match=MatchAny(any=value),
+                            )
                         )
-                    )
+                    else:
+                        conditions.append(
+                            FieldCondition(
+                                key=key,
+                                match=MatchValue(value=value),
+                            )
+                        )
 
             # Create Qdrant filter
             qdrant_filter = Filter(must=conditions) if conditions else None

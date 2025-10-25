@@ -226,12 +226,20 @@ class AgenticQueryPipeline:
 
             # Generate new queries using LLM
             if iteration == 0:
-                # First iteration: use user's question directly
+                # First iteration: user's question + LLM-generated queries
                 generated_queries = [
                     {"type": "semantic", "query": last_user_msg}
                 ]
+                # Also generate additional queries via LLM
+                additional_queries, query_gen_usage = await self.llm.generate_queries(
+                    messages=norm,
+                    existing_queries=queries_used,
+                    max_queries=max_queries_per_iter,
+                )
+                total_usage += query_gen_usage
+                generated_queries.extend(additional_queries)
             else:
-                # Subsequent iterations: generate new queries
+                # Subsequent iterations: only generate new queries
                 generated_queries, query_gen_usage = await self.llm.generate_queries(
                     messages=norm,
                     existing_queries=queries_used,
