@@ -1,7 +1,7 @@
 """Qdrant vector store implementation - Pinecone-compatible interface."""
 
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, cast
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -228,7 +228,7 @@ class QdrantStore(BaseVectorStore):
                             )
 
                 if conditions:
-                    qdrant_filter = Filter(must=conditions)
+                    qdrant_filter = Filter(must=cast(Sequence[Any], conditions))
 
             # Query (using modern query_points API)
             response = self.client.query_points(
@@ -252,7 +252,7 @@ class QdrantStore(BaseVectorStore):
                     SearchResult(
                         id=result_id,
                         score=result.score,
-                        metadata=result.payload if includeMetadata else {},
+                        metadata=result.payload or {} if includeMetadata else {},
                     )
                 )
 
@@ -330,7 +330,7 @@ class QdrantStore(BaseVectorStore):
             while True:
                 scroll_result = self.client.scroll(
                     collection_name=self.collection_name,
-                    scroll_filter=Filter(must=conditions) if conditions else None,
+                    scroll_filter=Filter(must=cast(Sequence[Any], conditions)) if conditions else None,
                     limit=100,
                     offset=offset,
                     with_payload=self._use_uuid,  # Need payload to check _original_id
@@ -390,7 +390,7 @@ class QdrantStore(BaseVectorStore):
 
             scroll_result = self.client.scroll(
                 collection_name=self.collection_name,
-                scroll_filter=Filter(must=conditions) if conditions else None,
+                scroll_filter=Filter(must=cast(Sequence[Any], conditions)) if conditions else None,
                 limit=limit,
                 with_payload=self._use_uuid,  # Need payload for _original_id
             )
@@ -421,7 +421,18 @@ class QdrantStore(BaseVectorStore):
         """Get vector dimension from collection info."""
         try:
             collection_info = self.client.get_collection(self.collection_name)
-            vector_size = collection_info.config.params.vectors.size
+            vectors_config = collection_info.config.params.vectors
+
+            # Handle both VectorParams and dict[str, VectorParams]
+            if isinstance(vectors_config, VectorParams):
+                vector_size = vectors_config.size
+            elif isinstance(vectors_config, dict):
+                # Get first vector config from dict
+                first_config = next(iter(vectors_config.values()))
+                vector_size = first_config.size
+            else:
+                raise StorageError("Unexpected vectors config type")
+
             return vector_size
 
         except Exception as e:

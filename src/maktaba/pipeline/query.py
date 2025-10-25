@@ -40,6 +40,8 @@ class QueryPipeline:
         query: str,
         rerank: bool = True,
         top_k: Optional[int] = None,
+        rerank_limit: Optional[int] = None,
+        min_score: Optional[float] = None,
         namespace: Optional[str] = None,
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
@@ -60,21 +62,28 @@ class QueryPipeline:
             namespace=ns,
         )
 
-        # 3) Rerank (optional)
+        # 3) Apply min_score filter if specified (before reranking)
+        if min_score is not None:
+            initial = [r for r in initial if r.score is not None and r.score >= min_score]
+            self._logger.info("query.min_score_filter: threshold=%.3f remaining=%d", min_score, len(initial))
+
+        # 4) Rerank (optional)
         if rerank and self.reranker is not None:
-            ranked = await self.reranker.rerank(query, initial, top_k=k)
+            rerank_k = rerank_limit if rerank_limit is not None else k
+            ranked = await self.reranker.rerank(query, initial, top_k=rerank_k)
         else:
             ranked = initial[:k]
 
         self._logger.info("query.retrieved: initial=%d ranked=%d", len(initial), len(ranked))
 
-        # 4) Format citations
+        # 5) Format citations
         formatted = format_with_citations(ranked, top_k=k)
         formatted["results"] = ranked
+        citations = formatted.get("citations", [])
         self._logger.info(
             "query.done: formatted_blocks=%d citations=%d",
             len(ranked),
-            len(formatted.get("citations", [])),
+            len(citations) if hasattr(citations, '__len__') else 0,
         )
         return formatted
 
@@ -84,6 +93,8 @@ class QueryPipeline:
         *,
         rerank: bool = True,
         top_k: Optional[int] = None,
+        rerank_limit: Optional[int] = None,
+        min_score: Optional[float] = None,
         namespace: Optional[str] = None,
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
@@ -125,6 +136,8 @@ class QueryPipeline:
             condensed,
             rerank=rerank,
             top_k=top_k,
+            rerank_limit=rerank_limit,
+            min_score=min_score,
             namespace=namespace,
             filter=filter,
             includeMetadata=includeMetadata,

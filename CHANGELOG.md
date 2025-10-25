@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-10-25
+
+### Added
+- **Agentic RAG Pipeline**: Iterative query generation and retrieval with LLM-based evaluation
+  - `AgenticQueryPipeline` with support for multi-iteration search
+  - Automatic query generation using OpenAI (or custom LLM providers)
+  - Source evaluation to determine when sufficient information is retrieved
+  - Parallel query execution for improved performance
+- **Keyword Search Support**: Full-text search alongside semantic vector search
+  - `BaseKeywordStore` abstract interface
+  - `QdrantKeywordStore` implementation using Qdrant's full-text search
+  - `SupabaseKeywordStore` implementation using PostgreSQL full-text search
+  - Query routing by type: "keyword" vs "semantic"
+- **LLM Abstractions**:
+  - `BaseLLM` interface for query generation and source evaluation
+  - `OpenAILLM` implementation with JSON mode and precise token tracking
+  - `LLMUsage` dataclass for accurate token counting
+- **Enhanced Configuration**:
+  - `max_queries_per_iter` parameter for controlling query volume
+  - `keyword_limit` parameter for keyword search results
+  - `include_query_results` flag for debugging query-to-result mappings
+  - Optional `supabase` dependency group
+
+### Changed
+- Ruff configuration now ignores E501 (line length) for prompt strings and N806 (variable naming) for test mocks
+
 ## [0.1.4] - 2025-10-25
 
 ### Fixed
@@ -54,6 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/nuhatech/maktaba/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/nuhatech/maktaba/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0
