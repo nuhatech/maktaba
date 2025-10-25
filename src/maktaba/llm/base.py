@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Tuple
 
+from ..models import LLMUsage
+
 
 class BaseLLM(ABC):
     """
@@ -19,7 +21,7 @@ class BaseLLM(ABC):
         messages: List[Tuple[str, str]],
         existing_queries: List[str],
         max_queries: int = 10,
-    ) -> List[Dict[str, str]]:
+    ) -> Tuple[List[Dict[str, str]], LLMUsage]:
         """
         Generate search queries from conversation history.
 
@@ -29,15 +31,19 @@ class BaseLLM(ABC):
             max_queries: Maximum number of queries to generate
 
         Returns:
-            List of query dicts with keys:
-                - type: "semantic" or "keyword"
-                - query: The search query string
+            Tuple of (queries, usage):
+                - queries: List of query dicts with keys:
+                    - type: "semantic" or "keyword"
+                    - query: The search query string
+                - usage: LLMUsage object with token counts
 
         Example:
-            [
+            queries = [
                 {"type": "semantic", "query": "What is tawhid in Islam?"},
                 {"type": "keyword", "query": "tawhid"},
             ]
+            usage = LLMUsage(input_tokens=150, output_tokens=25)
+            return queries, usage
         """
         raise NotImplementedError
 
@@ -46,7 +52,7 @@ class BaseLLM(ABC):
         self,
         messages: List[Tuple[str, str]],
         sources: List[str],
-    ) -> bool:
+    ) -> Tuple[bool, LLMUsage]:
         """
         Evaluate if retrieved sources contain sufficient information to answer.
 
@@ -55,7 +61,9 @@ class BaseLLM(ABC):
             sources: List of retrieved text chunks
 
         Returns:
-            True if sources can answer the question, False otherwise
+            Tuple of (can_answer, usage):
+                - can_answer: True if sources can answer the question
+                - usage: LLMUsage object with token counts
         """
         raise NotImplementedError
 

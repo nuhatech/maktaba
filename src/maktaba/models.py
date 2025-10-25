@@ -139,6 +139,35 @@ class PartitionConfig:
     batch_size: int = 30  # Default
 
 
+@dataclass
+class LLMUsage:
+    """
+    LLM token usage tracking.
+
+    Tracks input and output tokens for precise cost/budget monitoring.
+    Provider-agnostic - works with OpenAI, Anthropic, Bedrock, etc.
+    """
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        """Total tokens used (input + output)."""
+        return self.input_tokens + self.output_tokens
+
+    def __add__(self, other: 'LLMUsage') -> 'LLMUsage':
+        """Add two usage objects together."""
+        return LLMUsage(
+            input_tokens=self.input_tokens + other.input_tokens,
+            output_tokens=self.output_tokens + other.output_tokens
+        )
+
+    def __repr__(self) -> str:
+        """String representation."""
+        return f"LLMUsage(input={self.input_tokens}, output={self.output_tokens}, total={self.total_tokens})"
+
+
 # Type aliases for clarity
 EmbeddingVector = List[float]
 EmbeddingBatch = List[EmbeddingVector]

@@ -4,6 +4,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..logging import get_logger
+from ..models import LLMUsage
 from .base import BaseLLM
 
 
@@ -84,7 +85,7 @@ class OpenAILLM(BaseLLM):
         messages: List[Tuple[str, str]],
         existing_queries: List[str],
         max_queries: int = 10,
-    ) -> List[Dict[str, str]]:
+    ) -> Tuple[List[Dict[str, str]], LLMUsage]:
         """
         Generate search queries using OpenAI.
 
@@ -94,12 +95,14 @@ class OpenAILLM(BaseLLM):
             max_queries: Maximum number of queries to generate
 
         Returns:
-            List of {"type": "semantic"|"keyword", "query": "..."} dicts
+            Tuple of (queries, usage):
+                - queries: List of {"type": "semantic"|"keyword", "query": "..."} dicts
+                - usage: LLMUsage with token counts
         """
         client = self._get_client()
         if client is None:
             self._logger.warning("OpenAI client unavailable, returning empty queries")
-            return []
+            return [], LLMUsage()
 
         try:
             # Build prompt
@@ -124,26 +127,35 @@ class OpenAILLM(BaseLLM):
                 response_format={"type": "json_object"},
             )
 
+            # Extract usage from response
+            usage = LLMUsage(
+                input_tokens=response.usage.prompt_tokens,
+                output_tokens=response.usage.completion_tokens
+            )
+
             content = response.choices[0].message.content
             if not content:
-                return []
+                return [], usage
 
             # Parse JSON response
             result = json.loads(content)
             queries = result.get("queries", [])
 
-            self._logger.info(f"Generated {len(queries)} queries: {[q['query'] for q in queries]}")
-            return queries[:max_queries]
+            self._logger.info(
+                f"Generated {len(queries)} queries: {[q['query'] for q in queries]} "
+                f"(tokens: {usage.total_tokens})"
+            )
+            return queries[:max_queries], usage
 
         except Exception as e:
             self._logger.error(f"Query generation failed: {e}", exc_info=True)
-            return []
+            return [], LLMUsage()
 
     async def evaluate_sources(
         self,
         messages: List[Tuple[str, str]],
         sources: List[str],
-    ) -> bool:
+    ) -> Tuple[bool, LLMUsage]:
         """
         Evaluate if sources can answer the question.
 
@@ -152,12 +164,14 @@ class OpenAILLM(BaseLLM):
             sources: List of retrieved text chunks
 
         Returns:
-            True if sources contain sufficient information
+            Tuple of (can_answer, usage):
+                - can_answer: True if sources contain sufficient information
+                - usage: LLMUsage with token counts
         """
         client = self._get_client()
         if client is None:
             self._logger.warning("OpenAI client unavailable, assuming sources are sufficient")
-            return True  # Optimistic fallback
+            return True, LLMUsage()  # Optimistic fallback
 
         try:
             # Format inputs
@@ -180,17 +194,23 @@ class OpenAILLM(BaseLLM):
                 response_format={"type": "json_object"},
             )
 
+            # Extract usage from response
+            usage = LLMUsage(
+                input_tokens=response.usage.prompt_tokens,
+                output_tokens=response.usage.completion_tokens
+            )
+
             content = response.choices[0].message.content
             if not content:
-                return True  # Optimistic fallback
+                return True, usage  # Optimistic fallback
 
             # Parse JSON response
             result = json.loads(content)
             can_answer = result.get("canAnswer", True)
 
-            self._logger.info(f"Source evaluation: canAnswer={can_answer}")
-            return can_answer
+            self._logger.info(f"Source evaluation: canAnswer={can_answer} (tokens: {usage.total_tokens})")
+            return can_answer, usage
 
         except Exception as e:
             self._logger.error(f"Source evaluation failed: {e}", exc_info=True)
-            return True  # Optimistic fallback
+            return True, LLMUsage()  # Optimistic fallback
