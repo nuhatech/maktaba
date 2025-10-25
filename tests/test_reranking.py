@@ -2,7 +2,7 @@ import pytest
 
 from maktaba.models import SearchResult
 from maktaba.reranking.cohere import CohereReranker
-from maktaba.reranking.zerank import ZerankReranker
+from maktaba.reranking.zeroentropy import ZeroEntropyReranker
 
 
 @pytest.mark.asyncio
@@ -20,9 +20,9 @@ async def test_cohere_reranker_offline_heuristic_orders_results():
 
 
 @pytest.mark.asyncio
-async def test_zerank_reranker_offline_heuristic_orders_results():
-    """Test ZerankReranker with offline heuristic fallback."""
-    rr = ZerankReranker(use_api=False)
+async def test_zeroentropy_reranker_offline_heuristic_orders_results():
+    """Test ZeroEntropyReranker with offline heuristic fallback."""
+    rr = ZeroEntropyReranker(use_api=False)
     query = "What is Tawhid?"
     results = [
         SearchResult(id="doc#1", score=0.5, metadata={"text": "Completely unrelated."}),
@@ -36,9 +36,9 @@ async def test_zerank_reranker_offline_heuristic_orders_results():
 
 
 @pytest.mark.asyncio
-async def test_zerank_reranker_empty_results():
-    """Test ZerankReranker with empty results list."""
-    rr = ZerankReranker(use_api=False)
+async def test_zeroentropy_reranker_empty_results():
+    """Test ZeroEntropyReranker with empty results list."""
+    rr = ZeroEntropyReranker(use_api=False)
     query = "What is RAG?"
     results = []
 
@@ -47,9 +47,9 @@ async def test_zerank_reranker_empty_results():
 
 
 @pytest.mark.asyncio
-async def test_zerank_reranker_respects_top_k():
-    """Test ZerankReranker respects top_k parameter."""
-    rr = ZerankReranker(use_api=False)
+async def test_zeroentropy_reranker_respects_top_k():
+    """Test ZeroEntropyReranker respects top_k parameter."""
+    rr = ZeroEntropyReranker(use_api=False)
     query = "Retrieval Augmented Generation"
     results = [
         SearchResult(id="doc#1", score=0.5, metadata={"text": "Completely unrelated."}),

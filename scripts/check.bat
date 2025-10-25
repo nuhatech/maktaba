@@ -18,6 +18,7 @@ if %ERRORLEVEL% EQU 0 (
 ) else (
     echo [FAIL] Ruff failed
     set FAILED=1
+    uv run ruff check . --fix
 )
 
 REM Check 2: MyPy type checking

@@ -2,6 +2,6 @@
 
 from .base import BaseReranker
 from .cohere import CohereReranker
-from .zerank import ZerankReranker
+from .zeroentropy import ZeroEntropyReranker
 
-__all__ = ["BaseReranker", "CohereReranker", "ZerankReranker"]
+__all__ = ["BaseReranker", "CohereReranker", "ZeroEntropyReranker"]
