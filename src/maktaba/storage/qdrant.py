@@ -8,6 +8,7 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
+    MatchAny,
     MatchValue,
     PointStruct,
     VectorParams,
@@ -210,12 +211,21 @@ class QdrantStore(BaseVectorStore):
                 # Add custom filters
                 if filter:
                     for key, value in filter.items():
-                        conditions.append(
-                            FieldCondition(
-                                key=key,
-                                match=MatchValue(value=value),
+                        # Handle list values with MatchAny, single values with MatchValue
+                        if isinstance(value, list):
+                            conditions.append(
+                                FieldCondition(
+                                    key=key,
+                                    match=MatchAny(any=value),
+                                )
                             )
-                        )
+                        else:
+                            conditions.append(
+                                FieldCondition(
+                                    key=key,
+                                    match=MatchValue(value=value),
+                                )
+                            )
 
                 if conditions:
                     qdrant_filter = Filter(must=conditions)

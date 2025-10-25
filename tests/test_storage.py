@@ -166,3 +166,182 @@ async def test_qdrant_store_namespace_isolation():
     )
 
     assert len(results_all) == 2
+
+
+@pytest.mark.asyncio
+async def test_qdrant_store_filter_single_value():
+    """Test filtering with single values (e.g., book_id=123)."""
+    store = QdrantStore(url=":memory:", collection_name="test_filter_single")
+    store.create_collection(dimension=3)
+
+    # Create chunks with different metadata
+    chunks = [
+        VectorChunk(
+            id="book_123#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 123, "author": "Ibn Taymiyyah", "category": "theology"},
+        ),
+        VectorChunk(
+            id="book_456#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 456, "author": "Al-Ghazali", "category": "philosophy"},
+        ),
+        VectorChunk(
+            id="book_789#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 789, "author": "Ibn Taymiyyah", "category": "theology"},
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Filter by single book_id
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": 123},
+    )
+
+    assert len(results) == 1
+    assert results[0].id == "book_123#chunk_0"
+    assert results[0].metadata["book_id"] == 123
+
+    # Filter by author
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"author": "Ibn Taymiyyah"},
+    )
+
+    assert len(results) == 2
+    result_ids = {r.id for r in results}
+    assert "book_123#chunk_0" in result_ids
+    assert "book_789#chunk_0" in result_ids
+
+
+@pytest.mark.asyncio
+async def test_qdrant_store_filter_list_values():
+    """Test filtering with list values (e.g., book_id=[123, 456])."""
+    store = QdrantStore(url=":memory:", collection_name="test_filter_list")
+    store.create_collection(dimension=3)
+
+    # Create chunks with different book IDs
+    chunks = [
+        VectorChunk(
+            id="book_123#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 123, "author": "Ibn Taymiyyah"},
+        ),
+        VectorChunk(
+            id="book_456#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 456, "author": "Al-Ghazali"},
+        ),
+        VectorChunk(
+            id="book_789#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 789, "author": "Ibn Rushd"},
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Filter by list of book_ids (MatchAny)
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": [123, 456]},
+    )
+
+    assert len(results) == 2
+    result_ids = {r.id for r in results}
+    assert "book_123#chunk_0" in result_ids
+    assert "book_456#chunk_0" in result_ids
+    assert "book_789#chunk_0" not in result_ids
+
+    # Filter by single-item list
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": [789]},
+    )
+
+    assert len(results) == 1
+    assert results[0].id == "book_789#chunk_0"
+
+
+@pytest.mark.asyncio
+async def test_qdrant_store_filter_multiple_fields():
+    """Test combining multiple filters (book_id list + category string)."""
+    store = QdrantStore(url=":memory:", collection_name="test_filter_multiple")
+    store.create_collection(dimension=3)
+
+    # Create chunks with various combinations
+    chunks = [
+        VectorChunk(
+            id="book_123#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 123, "category": "theology", "author": "Ibn Taymiyyah"},
+        ),
+        VectorChunk(
+            id="book_456#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 456, "category": "philosophy", "author": "Al-Ghazali"},
+        ),
+        VectorChunk(
+            id="book_789#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 789, "category": "theology", "author": "Ibn Rushd"},
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Filter by book_id list AND category
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": [123, 789], "category": "theology"},
+    )
+
+    # Both book_123 and book_789 match (both in list AND both theology)
+    assert len(results) == 2
+    result_ids = {r.id for r in results}
+    assert "book_123#chunk_0" in result_ids
+    assert "book_789#chunk_0" in result_ids
+
+    # Filter by book_id list AND category (no match for philosophy)
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": [123, 789], "category": "philosophy"},
+    )
+
+    # No results (123 and 789 are theology, not philosophy)
+    assert len(results) == 0
+
+
+@pytest.mark.asyncio
+async def test_qdrant_store_filter_empty_list():
+    """Test edge case with empty list filter."""
+    store = QdrantStore(url=":memory:", collection_name="test_filter_empty")
+    store.create_collection(dimension=3)
+
+    chunks = [
+        VectorChunk(
+            id="book_123#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"book_id": 123},
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Empty list filter should return no results
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=10,
+        filter={"book_id": []},
+    )
+
+    assert len(results) == 0

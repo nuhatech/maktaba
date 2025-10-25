@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-10-25
+
+### Fixed
+- Renamed the reranker provider from "Zerank" (the model name) to "ZeroEntropy" (the company name) throughout the codebase and documentation for consistency.
+
+### Added
+- Added support for both list and single-value filters.
+
 ## [0.1.3] - 2025-10-11
 
 ### Fixed

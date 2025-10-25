@@ -1,4 +1,4 @@
-"""ZeroEntropy Zerank reranker implementation."""
+"""ZeroEntropy reranker implementation."""
 
 import os
 from typing import List, Optional
@@ -7,11 +7,11 @@ from ..models import SearchResult
 from .base import BaseReranker
 
 
-class ZerankReranker(BaseReranker):
+class ZeroEntropyReranker(BaseReranker):
     """
-    ZeroEntropy Zerank reranker wrapper.
+    ZeroEntropy reranker wrapper.
 
-    - If use_api=True and zeroentropy is available, calls Zerank API.
+    - If use_api=True and zeroentropy is available, calls ZeroEntropy API.
     - Otherwise falls back to simple keyword-overlap heuristic.
 
     Requires:
@@ -19,8 +19,8 @@ class ZerankReranker(BaseReranker):
         - Environment variable: ZEROENTROPY_API_KEY
 
     Example:
-        >>> from maktaba.reranking import ZerankReranker
-        >>> reranker = ZerankReranker(use_api=True)
+        >>> from maktaba.reranking import ZeroEntropyReranker
+        >>> reranker = ZeroEntropyReranker(use_api=True)
         >>> ranked = await reranker.rerank(query="...", results=[...])
     """
 
@@ -31,7 +31,7 @@ class ZerankReranker(BaseReranker):
         use_api: bool = True,
     ) -> None:
         """
-        Initialize ZerankReranker.
+        Initialize ZeroEntropyReranker.
 
         Args:
             api_key: ZeroEntropy API key. If None, reads from ZEROENTROPY_API_KEY env var.
@@ -56,7 +56,7 @@ class ZerankReranker(BaseReranker):
         self, query: str, results: List[SearchResult], top_k: Optional[int] = None
     ) -> List[SearchResult]:
         """
-        Rerank search results using ZeroEntropy Zerank API.
+        Rerank search results using ZeroEntropy API.
 
         Args:
             query: User query text
@@ -83,7 +83,7 @@ class ZerankReranker(BaseReranker):
                 # Extract documents from SearchResult
                 docs = [r.text or "" for r in results]
 
-                # Call Zerank API
+                # Call ZeroEntropy API
                 response = await self._client.models.rerank(
                     model=self.model,
                     query=query,
