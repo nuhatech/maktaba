@@ -59,8 +59,10 @@ class ChromaStore(BaseVectorStore):
         topK: int = 10,
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
+        includeRelationships: bool = False,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:
+        # Note: ChromaDB doesn't support relationships, parameter ignored
         try:
             where = dict(filter or {})
             if namespace:

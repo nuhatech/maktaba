@@ -41,7 +41,13 @@ class DummyStore(BaseVectorStore):
         pass
 
     async def query(
-        self, vector, topK: int = 10, filter=None, includeMetadata: bool = True, namespace=None
+        self,
+        vector,
+        topK: int = 10,
+        filter=None,
+        includeMetadata: bool = True,
+        namespace=None,
+        includeRelationships: bool = False,
     ):
         # Return predictable results
         return [
@@ -49,6 +55,7 @@ class DummyStore(BaseVectorStore):
                 id=f"doc#{i}",
                 score=0.9 - i * 0.1,
                 metadata={"text": f"This is semantic result {i} about the topic."},
+                relationships=None,
             )
             for i in range(min(topK, 5))
         ]
@@ -76,6 +83,10 @@ class DummyKeywordStore(BaseKeywordStore):
             )
             for i in range(min(limit, 3))
         ]
+
+    async def upsert(self, chunks, namespace=None):
+        # No-op for tests to satisfy abstract interface
+        return None
 
 
 class DummyReranker(BaseReranker):

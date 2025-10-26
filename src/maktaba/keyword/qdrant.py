@@ -189,6 +189,33 @@ class QdrantKeywordStore(BaseKeywordStore):
                 )
 
             return search_results[:limit]
-
         except Exception as e:
             raise StorageError(f"Qdrant keyword search failed: {str(e)}") from e
+
+    async def upsert(
+        self,
+        chunks: List[Dict[str, Any]],
+        namespace: Optional[str] = None,
+    ) -> None:
+        """
+        Upsert chunks to Qdrant for keyword search.
+
+        Note:
+            QdrantKeywordStore searches the SAME Qdrant collection as QdrantStore.
+            When chunks are upserted to the vector store, they are automatically
+            available for keyword search (assuming the text field is indexed).
+
+            Therefore, this method is a no-op - the data is already in Qdrant
+            from the vector store upsert operation.
+
+            If you need to ensure the text field is properly indexed for full-text
+            search, configure the Qdrant collection with a text index on the
+            text field during collection creation.
+
+        Args:
+            chunks: List of chunk dicts (not used - data already in Qdrant)
+            namespace: Optional namespace (not used - data already in Qdrant)
+        """
+        # No-op: Chunks are already in Qdrant from vector store upsert
+        # The QdrantKeywordStore shares the same collection as QdrantStore
+        pass

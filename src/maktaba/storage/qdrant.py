@@ -15,7 +15,7 @@ from qdrant_client.models import (
 )
 
 from ..exceptions import StorageError
-from ..models import SearchResult, VectorChunk
+from ..models import NodeRelationship, SearchResult, VectorChunk
 from .base import BaseVectorStore
 
 # UUID namespace for generating deterministic UUIDs from original IDs
@@ -152,6 +152,21 @@ class QdrantStore(BaseVectorStore):
                     # Server mode: use string ID directly
                     point_id = chunk.id
 
+                # Store relationships in metadata (serialize NodeRelationship objects)
+                if chunk.relationships:
+                    serialized_rels = {}
+                    for rel_type, rel_obj in chunk.relationships.items():
+                        if hasattr(rel_obj, 'to_dict'):
+                            # NodeRelationship object - serialize it
+                            serialized_rels[rel_type] = rel_obj.to_dict()
+                        else:
+                            # Legacy string format - store as-is
+                            serialized_rels[rel_type] = rel_obj
+                    payload["_relationships"] = serialized_rels
+                elif hasattr(chunk, 'simple_relationships') and chunk.simple_relationships:
+                    # Legacy simple relationships support
+                    payload["_relationships"] = chunk.simple_relationships
+
                 # Add namespace to payload if provided
                 if namespace:
                     payload["namespace"] = namespace
@@ -178,6 +193,7 @@ class QdrantStore(BaseVectorStore):
         topK: int = 10,  # camelCase!
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
+        includeRelationships: bool = False,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:
         """
@@ -188,6 +204,7 @@ class QdrantStore(BaseVectorStore):
             topK: Number of results (camelCase to match Pinecone)
             filter: Optional metadata filters
             includeMetadata: Whether to include metadata
+            includeRelationships: Whether to include relationships (NEXT/PREVIOUS links)
             namespace: Optional namespace filter
 
         Returns:
@@ -248,11 +265,27 @@ class QdrantStore(BaseVectorStore):
                 if self._use_uuid and result.payload:
                     result_id = result.payload.get("_original_id", result_id)
 
+                # Extract and deserialize relationships if requested
+                relationships = None
+                if includeRelationships and result.payload:
+                    rels_data = result.payload.get("_relationships")
+                    if rels_data and isinstance(rels_data, dict):
+                        # Deserialize NodeRelationship objects
+                        relationships = {}
+                        for rel_type, rel_value in rels_data.items():
+                            if isinstance(rel_value, dict) and "node_id" in rel_value:
+                                # Full NodeRelationship format
+                                relationships[rel_type] = NodeRelationship.from_dict(rel_value)
+                            else:
+                                # Legacy string format - keep as-is for backward compat
+                                relationships[rel_type] = rel_value
+
                 search_results.append(
                     SearchResult(
                         id=result_id,
                         score=result.score,
                         metadata=result.payload or {} if includeMetadata else {},
+                        relationships=relationships,
                     )
                 )
 
