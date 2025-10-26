@@ -2,7 +2,7 @@
 
 import pytest
 
-from maktaba.models import VectorChunk
+from maktaba.models import NodeRelationship, RelationshipType, VectorChunk
 from maktaba.storage.qdrant import QdrantStore
 
 
@@ -345,3 +345,175 @@ async def test_qdrant_store_filter_empty_list():
     )
 
     assert len(results) == 0
+
+
+# Test 9: QdrantStore with NodeRelationship objects
+@pytest.mark.asyncio
+async def test_qdrant_store_node_relationships():
+    """Test QdrantStore correctly serializes and deserializes NodeRelationship objects."""
+    store = QdrantStore(url=":memory:", collection_name="test_relationships")
+    store.create_collection(dimension=3)
+
+    # Create chunks with NodeRelationship objects
+    chunks = [
+        VectorChunk(
+            id="book_123#page_1",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"text": "Page 1"},
+            relationships={
+                "NEXT": NodeRelationship(
+                    node_id="book_123#page_2",
+                    node_type="1",  # TEXT type
+                    metadata={"page_number": 2},
+                ),
+                "SOURCE": NodeRelationship(
+                    node_id="book_123",
+                    node_type="1",
+                    metadata={"book_title": "Test Book"},
+                ),
+            },
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Query with relationships
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=1,
+        includeRelationships=True,
+    )
+
+    assert len(results) == 1
+    result = results[0]
+
+    # Verify relationships are NodeRelationship objects
+    assert result.relationships is not None
+    assert "NEXT" in result.relationships
+    assert "SOURCE" in result.relationships
+
+    next_rel = result.relationships["NEXT"]
+    assert isinstance(next_rel, NodeRelationship)
+    assert next_rel.node_id == "book_123#page_2"
+    assert next_rel.node_type == "1"
+    assert next_rel.metadata["page_number"] == 2
+
+    source_rel = result.relationships["SOURCE"]
+    assert isinstance(source_rel, NodeRelationship)
+    assert source_rel.node_id == "book_123"
+    assert source_rel.metadata["book_title"] == "Test Book"
+
+
+# Test 10: Query without relationships
+@pytest.mark.asyncio
+async def test_qdrant_store_relationships_disabled():
+    """Test that relationships are not returned when includeRelationships=False."""
+    store = QdrantStore(url=":memory:", collection_name="test_no_relationships")
+    store.create_collection(dimension=3)
+
+    chunks = [
+        VectorChunk(
+            id="doc_1#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"text": "Test"},
+            relationships={
+                "NEXT": NodeRelationship(
+                    node_id="doc_1#chunk_1",
+                    node_type="1",
+                    metadata={},
+                ),
+            },
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Query without relationships
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=1,
+        includeRelationships=False,
+    )
+
+    assert len(results) == 1
+    assert results[0].relationships is None
+
+
+# Test 11: Legacy string relationships support
+@pytest.mark.asyncio
+async def test_qdrant_store_legacy_relationships():
+    """Test backward compatibility with legacy simple_relationships (strings)."""
+    store = QdrantStore(url=":memory:", collection_name="test_legacy")
+    store.create_collection(dimension=3)
+
+    # Create chunk with legacy simple_relationships
+    chunks = [
+        VectorChunk(
+            id="doc_1#chunk_0",
+            vector=[1.0, 0.0, 0.0],
+            metadata={"text": "Test"},
+            simple_relationships={
+                "NEXT": "doc_1#chunk_1",
+                "PREVIOUS": "doc_1#chunk_-1",
+            },
+        ),
+    ]
+
+    await store.upsert(chunks)
+
+    # Query should still work
+    results = await store.query(
+        vector=[1.0, 0.0, 0.0],
+        topK=1,
+        includeRelationships=True,
+    )
+
+    assert len(results) == 1
+    assert results[0].relationships is not None
+    # Legacy format stored as-is (strings)
+    assert results[0].relationships["NEXT"] == "doc_1#chunk_1"
+    assert results[0].relationships["PREVIOUS"] == "doc_1#chunk_-1"
+
+
+# Test 12: RelationshipType enum
+@pytest.mark.asyncio
+async def test_relationship_types_enum():
+    """Test that RelationshipType enum works correctly."""
+    assert RelationshipType.SOURCE.value == "SOURCE"
+    assert RelationshipType.PREVIOUS.value == "PREVIOUS"
+    assert RelationshipType.NEXT.value == "NEXT"
+    assert RelationshipType.PARENT.value == "PARENT"
+    assert RelationshipType.CHILD.value == "CHILD"
+
+    # Test enum as dict key
+    relationships = {
+        RelationshipType.NEXT: NodeRelationship(node_id="next_chunk", node_type="1"),
+    }
+
+    assert RelationshipType.NEXT in relationships
+
+
+# Test 13: NodeRelationship serialization
+@pytest.mark.asyncio
+async def test_node_relationship_serialization():
+    """Test NodeRelationship to_dict and from_dict methods."""
+    rel = NodeRelationship(
+        node_id="doc_123#chunk_5",
+        node_type="1",
+        metadata={"page": 5, "section": "Introduction"},
+        hash="abc123",
+    )
+
+    # Serialize
+    rel_dict = rel.to_dict()
+    assert rel_dict["node_id"] == "doc_123#chunk_5"
+    assert rel_dict["node_type"] == "1"
+    assert rel_dict["metadata"]["page"] == 5
+    assert rel_dict["hash"] == "abc123"
+
+    # Deserialize
+    restored = NodeRelationship.from_dict(rel_dict)
+    assert restored.node_id == rel.node_id
+    assert restored.node_type == rel.node_type
+    assert restored.metadata == rel.metadata
+    assert restored.hash == rel.hash

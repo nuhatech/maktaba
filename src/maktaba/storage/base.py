@@ -42,6 +42,7 @@ class BaseVectorStore(ABC):
         topK: int = 10,  # camelCase to match Pinecone
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
+        includeRelationships: bool = False,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:
         """
@@ -52,6 +53,7 @@ class BaseVectorStore(ABC):
             topK: Number of results to return (camelCase!)
             filter: Optional metadata filters (format depends on provider)
             includeMetadata: Whether to include metadata in results
+            includeRelationships: Whether to include relationships (NEXT/PREVIOUS links)
             namespace: Optional namespace to search in
 
         Returns:

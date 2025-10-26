@@ -79,6 +79,7 @@ class AgenticQueryPipeline:
         namespace: Optional[str],
         filter: Optional[Dict[str, Any]],
         includeMetadata: bool,
+        includeRelationships: bool = False,
     ) -> List[SearchResult]:
         """
         Execute a single query (semantic or keyword search).
@@ -93,6 +94,7 @@ class AgenticQueryPipeline:
             namespace: Search namespace
             filter: Metadata filters
             includeMetadata: Include metadata in results
+            includeRelationships: Include relationships in results
 
         Returns:
             List of SearchResult objects.
@@ -126,6 +128,7 @@ class AgenticQueryPipeline:
                     topK=top_k,
                     filter=filter,
                     includeMetadata=includeMetadata,
+                    includeRelationships=includeRelationships,
                     namespace=namespace,
                 )
 
@@ -159,6 +162,7 @@ class AgenticQueryPipeline:
         namespace: Optional[str] = None,
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
+        includeRelationships: bool = False,
         include_query_results: bool = False,
     ) -> Dict[str, Any]:
         """
@@ -176,6 +180,7 @@ class AgenticQueryPipeline:
             namespace: Namespace for vector search
             filter: Metadata filter for vector search
             includeMetadata: Include metadata in results
+            includeRelationships: Include relationships in results
             include_query_results: Include query->results mapping for debugging
 
         Returns:
@@ -288,6 +293,7 @@ class AgenticQueryPipeline:
                     namespace=ns,
                     filter=filter,
                     includeMetadata=includeMetadata,
+                    includeRelationships=includeRelationships,
                 )
                 for q in new_queries
             ]

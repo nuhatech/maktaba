@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.5"
+version = "0.1.6"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -88,6 +88,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+filterwarnings = [
+    "ignore::pydantic._internal._generate_schema.UnsupportedFieldAttributeWarning"
+]
 
 [tool.ruff]
 line-length = 120

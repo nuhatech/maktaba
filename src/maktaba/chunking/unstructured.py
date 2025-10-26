@@ -31,6 +31,9 @@ class UnstructuredChunker(BaseChunker):
         self,
         strategy: Literal["auto", "fast", "hi_res", "ocr_only"] = "auto",
         chunking_strategy: Literal["basic", "by_title"] = "basic",
+        overlap: Optional[int] = None,
+        max_characters: Optional[int] = None,
+        new_after_n_chars: Optional[int] = None,
         allowed_metadata_types: Tuple[type, ...] = (str, int, float, list, dict, type(None)),
     ):
         """
@@ -45,10 +48,16 @@ class UnstructuredChunker(BaseChunker):
             chunking_strategy: How to chunk documents (default: "basic")
                 - "basic": Simple text splitting
                 - "by_title": Chunk by document structure (headings)
+            overlap: Number of characters to overlap between chunks
+            max_characters: Hard maximum chunk size in characters
+            new_after_n_chars: Soft chunk size - prefer breaking after this many chars
             allowed_metadata_types: Allowed metadata value types
         """
         self.strategy = strategy
         self.chunking_strategy = chunking_strategy
+        self.overlap = overlap
+        self.max_characters = max_characters
+        self.new_after_n_chars = new_after_n_chars
         self.allowed_metadata_types = allowed_metadata_types
 
     async def chunk_text(
@@ -56,6 +65,7 @@ class UnstructuredChunker(BaseChunker):
         text: str,
         filename: str = "document.txt",
         extra_metadata: Optional[Dict[str, Any]] = None,
+        batch_size: Optional[int] = None,
         **kwargs: Any,
     ) -> ChunkResult:
         """
@@ -97,6 +107,19 @@ class UnstructuredChunker(BaseChunker):
                 ),
             }
 
+            # Add advanced chunking parameters if set
+            overlap = kwargs.get("overlap", self.overlap)
+            if overlap is not None:
+                unstructured_args["overlap"] = overlap
+
+            max_chars = kwargs.get("max_characters", self.max_characters)
+            if max_chars is not None:
+                unstructured_args["max_characters"] = max_chars
+
+            new_after = kwargs.get("new_after_n_chars", self.new_after_n_chars)
+            if new_after is not None:
+                unstructured_args["new_after_n_chars"] = new_after
+
             # Load and chunk document
             reader = UnstructuredReader(
                 allowed_metadata_types=self.allowed_metadata_types,
@@ -131,6 +154,7 @@ class UnstructuredChunker(BaseChunker):
                 total_characters=total_characters,
                 total_pages=total_pages,
                 extra_metadata=extra_metadata or {},
+                batch_size=batch_size,
             )
 
         except Exception as e:
@@ -140,6 +164,7 @@ class UnstructuredChunker(BaseChunker):
         self,
         file_path: Path | str,
         extra_metadata: Optional[Dict[str, Any]] = None,
+        batch_size: Optional[int] = None,
         **kwargs: Any,
     ) -> ChunkResult:
         """
@@ -186,6 +211,19 @@ class UnstructuredChunker(BaseChunker):
                 ),
             }
 
+            # Add advanced chunking parameters if set
+            overlap = kwargs.get("overlap", self.overlap)
+            if overlap is not None:
+                unstructured_args["overlap"] = overlap
+
+            max_chars = kwargs.get("max_characters", self.max_characters)
+            if max_chars is not None:
+                unstructured_args["max_characters"] = max_chars
+
+            new_after = kwargs.get("new_after_n_chars", self.new_after_n_chars)
+            if new_after is not None:
+                unstructured_args["new_after_n_chars"] = new_after
+
             # Load and chunk document
             reader = UnstructuredReader(
                 allowed_metadata_types=self.allowed_metadata_types,
@@ -220,6 +258,7 @@ class UnstructuredChunker(BaseChunker):
                 total_characters=total_characters,
                 total_pages=total_pages,
                 extra_metadata=extra_metadata or {},
+                batch_size=batch_size,
             )
 
         except ChunkingError:
@@ -232,6 +271,7 @@ class UnstructuredChunker(BaseChunker):
         url: str,
         filename: str,
         extra_metadata: Optional[Dict[str, Any]] = None,
+        batch_size: Optional[int] = None,
         **kwargs: Any,
     ) -> ChunkResult:
         """
@@ -280,6 +320,19 @@ class UnstructuredChunker(BaseChunker):
                 ),
             }
 
+            # Add advanced chunking parameters if set
+            overlap = kwargs.get("overlap", self.overlap)
+            if overlap is not None:
+                unstructured_args["overlap"] = overlap
+
+            max_chars = kwargs.get("max_characters", self.max_characters)
+            if max_chars is not None:
+                unstructured_args["max_characters"] = max_chars
+
+            new_after = kwargs.get("new_after_n_chars", self.new_after_n_chars)
+            if new_after is not None:
+                unstructured_args["new_after_n_chars"] = new_after
+
             # Load and chunk document
             reader = UnstructuredReader(
                 allowed_metadata_types=self.allowed_metadata_types,
@@ -314,6 +367,7 @@ class UnstructuredChunker(BaseChunker):
                 total_characters=total_characters,
                 total_pages=total_pages,
                 extra_metadata=extra_metadata or {},
+                batch_size=batch_size,
             )
 
         except httpx.HTTPError as e:

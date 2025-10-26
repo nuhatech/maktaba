@@ -1,5 +1,6 @@
 """Supabase keyword search implementation using PostgreSQL FTS."""
 
+import os
 from typing import Any, Callable, Dict, List, Optional
 
 try:
@@ -59,9 +60,9 @@ class SupabaseKeywordStore(BaseKeywordStore):
 
     def __init__(
         self,
-        url: str,
-        key: str,
-        table_name: str,
+        url: Optional[str] = None,
+        key: Optional[str] = None,
+        table_name: str = "page_content",
         text_column: str = "text",
         search_vector_column: str = "search_vector",
         id_column: str = "id",
@@ -71,8 +72,8 @@ class SupabaseKeywordStore(BaseKeywordStore):
         Initialize Supabase keyword store.
 
         Args:
-            url: Supabase project URL (e.g., "https://xxx.supabase.co")
-            key: Supabase API key (anon or service role)
+            url: Supabase project URL (fallback: SUPABASE_URL env var)
+            key: Supabase API key (fallback: SUPABASE_KEY env var)
             table_name: Name of the table to search
             text_column: Name of the text column (default: "text")
             search_vector_column: Name of the tsvector column (default: "search_vector")
@@ -88,7 +89,20 @@ class SupabaseKeywordStore(BaseKeywordStore):
                 "Install with: pip install supabase"
             )
 
-        self.client: Client = create_client(url, key)
+        # Use explicit parameters or fallback to environment variables
+        _url = url or os.getenv("SUPABASE_URL")
+        _key = key or os.getenv("SUPABASE_KEY")
+
+        if not _url:
+            raise ValueError(
+                "Supabase URL must be provided either as url parameter or SUPABASE_URL environment variable"
+            )
+        if not _key:
+            raise ValueError(
+                "Supabase API key must be provided either as key parameter or SUPABASE_KEY environment variable"
+            )
+
+        self.client: Client = create_client(_url, _key)
         self.table_name = table_name
         self.text_column = text_column
         self.search_vector_column = search_vector_column
@@ -186,4 +200,65 @@ class SupabaseKeywordStore(BaseKeywordStore):
         except Exception as e:
             raise StorageError(
                 f"Supabase keyword search failed: {str(e)}"
+            ) from e
+
+    async def upsert(
+        self,
+        chunks: List[Dict[str, Any]],
+        namespace: Optional[str] = None,
+    ) -> None:
+        """
+        Upsert chunks to Supabase FTS table for keyword search.
+
+        Args:
+            chunks: List of chunk dicts with keys:
+                - id: Chunk ID
+                - text: Text content to index
+                - documentId: Parent document ID
+                - metadata: Additional metadata (optional)
+            namespace: Optional namespace for multi-tenancy
+
+        Note:
+            This method inserts chunks into the Supabase table and the
+            tsvector column is automatically updated by the database trigger
+            (if configured as shown in class docstring).
+        """
+        try:
+            if not chunks:
+                return
+
+            rows = []
+            for chunk in chunks:
+                # Build row for Supabase upsert
+                row = {
+                    self.id_column: chunk.get("id", ""),
+                    self.text_column: chunk.get("text", ""),
+                }
+
+                # Add namespace if provided
+                if namespace and "namespace" not in self.metadata_columns:
+                    row["namespace"] = namespace
+
+                # Add metadata columns if they exist in the chunk
+                if "metadata" in chunk and isinstance(chunk["metadata"], dict):
+                    for col in self.metadata_columns:
+                        if col in chunk["metadata"]:
+                            row[col] = chunk["metadata"][col]
+
+                # Add documentId if it's in metadata_columns
+                if "documentId" in chunk and "document_id" in self.metadata_columns:
+                    row["document_id"] = chunk["documentId"]
+
+                rows.append(row)
+
+            # Bulk upsert to Supabase
+            # on_conflict specifies which column to use for conflict resolution
+            self.client.table(self.table_name).upsert(
+                rows,
+                on_conflict=self.id_column
+            ).execute()
+
+        except Exception as e:
+            raise StorageError(
+                f"Supabase keyword upsert failed: {str(e)}"
             ) from e

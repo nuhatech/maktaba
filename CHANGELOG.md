@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-10-26
+
+### Added
+- Rich relationship modelling via new `RelationshipType` enum and `NodeRelationship` dataclass, enabling expressive NEXT/PREVIOUS links between chunks.
+- Automatic relationship generation in the ingestion pipeline so sequential text chunks are linked without manual wiring.
+- Advanced chunking controls (`overlap`, `max_characters`, `new_after_n_chars`) exposed through `UnstructuredChunker` for finer document splitting strategies.
+
+### Changed
+- Vector stores now persist and hydrate relationships consistently, including Pinecone, Qdrant, and Weaviate providers.
+- `VectorChunk` and search result models carry relationship metadata to downstream consumers for navigation-aware retrieval.
+- Test suite expanded to cover relationship handling and the new chunking configuration knobs.
+
 ## [0.1.5] - 2025-10-25
 
 ### Added
@@ -80,7 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/nuhatech/maktaba/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/nuhatech/maktaba/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/nuhatech/maktaba/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3

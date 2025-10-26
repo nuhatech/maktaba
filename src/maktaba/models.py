@@ -1,7 +1,59 @@
 """Core data models for Maktaba."""
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
+
+
+class RelationshipType(str, Enum):
+    """
+    LlamaIndex relationship types.
+
+    Maps to LlamaIndex numeric codes:
+    - SOURCE: "1" - Original source document
+    - PREVIOUS: "2" - Previous chunk in sequence
+    - NEXT: "3" - Next chunk in sequence
+    - PARENT: "4" - Parent node in hierarchy
+    - CHILD: "5" - Child node in hierarchy
+    """
+    SOURCE = "SOURCE"
+    PREVIOUS = "PREVIOUS"
+    NEXT = "NEXT"
+    PARENT = "PARENT"
+    CHILD = "CHILD"
+
+
+@dataclass
+class NodeRelationship:
+    """
+    Relationship to another node.
+
+    Stores full relationship metadata including node type and hash
+    for complete compatibility with LlamaIndex relationship structure.
+    """
+    node_id: str
+    node_type: Optional[str] = None  # ObjectType from LlamaIndex ("1" for TEXT, etc.)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    hash: Optional[str] = None  # Content hash for change detection
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            "node_id": self.node_id,
+            "node_type": self.node_type,
+            "metadata": self.metadata,
+            "hash": self.hash,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'NodeRelationship':
+        """Create from dictionary format."""
+        return cls(
+            node_id=data["node_id"],
+            node_type=data.get("node_type"),
+            metadata=data.get("metadata", {}),
+            hash=data.get("hash"),
+        )
 
 
 @dataclass
@@ -11,11 +63,17 @@ class VectorChunk:
 
     ID format: {document_id}#{chunk_id}
     Metadata follows LlamaIndex node format for compatibility.
+    Relationships enable linking chunks together (e.g., NEXT/PREVIOUS for sequential pages).
     """
 
     id: str  # Format: "{doc_id}#{chunk_id}"
     vector: List[float]  # Embedding vector (3072 dims for text-embedding-3-large)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    relationships: Optional[Dict[str, NodeRelationship]] = None  # Full LlamaIndex relationships
+
+    # Deprecated: Use relationships with NodeRelationship objects instead
+    # Kept for backward compatibility only
+    simple_relationships: Optional[Dict[str, str]] = None  # Legacy: {"NEXT": "doc#page_2"}
 
     def __post_init__(self) -> None:
         """Validate chunk format."""
@@ -31,11 +89,17 @@ class SearchResult:
     Search result from vector store.
 
     Represents a single result from semantic search.
+    Relationships allow navigation to related chunks (e.g., neighboring pages).
     """
 
     id: str  # Chunk ID
     score: Optional[float] = None  # Similarity score (0.0 - 1.0), None for keyword search
     metadata: Dict[str, Any] = field(default_factory=dict)
+    relationships: Optional[Dict[str, NodeRelationship]] = None  # Full LlamaIndex relationships
+
+    # Deprecated: Use relationships with NodeRelationship objects instead
+    # Kept for backward compatibility only
+    simple_relationships: Optional[Dict[str, str]] = None  # Legacy: {"NEXT": "doc#page_2"}
 
     @property
     def text(self) -> Optional[str]:

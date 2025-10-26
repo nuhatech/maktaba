@@ -49,6 +49,9 @@ class ChunkResult:
     extra_metadata: Dict[str, Any] = field(default_factory=dict)
     """Additional metadata provided by user"""
 
+    batch_size: Optional[int] = None
+    """Suggested batch size for downstream embedding"""
+
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format (matches partition-api response)."""
@@ -68,5 +71,8 @@ class ChunkResult:
 
         if self.extra_metadata:
             result["extra_metadata"] = self.extra_metadata
+
+        if self.batch_size is not None:
+            result["batch_size"] = self.batch_size
 
         return result
