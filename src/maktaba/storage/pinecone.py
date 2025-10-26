@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..exceptions import StorageError
-from ..models import SearchResult, VectorChunk
+from ..models import NodeRelationship, SearchResult, VectorChunk
 from .base import BaseVectorStore
 
 
@@ -49,7 +49,7 @@ class PineconeStore(BaseVectorStore):
                 {
                     "id": c.id,
                     "values": c.vector,
-                    "metadata": dict(c.metadata),
+                    "metadata": self._build_metadata(c, namespace),
                 }
                 for c in chunks
             ]
@@ -63,6 +63,7 @@ class PineconeStore(BaseVectorStore):
         topK: int = 10,
         filter: Optional[Dict[str, Any]] = None,
         includeMetadata: bool = True,
+        includeRelationships: bool = False,
         namespace: Optional[str] = None,
     ) -> List[SearchResult]:
         try:
@@ -71,7 +72,7 @@ class PineconeStore(BaseVectorStore):
                 top_k=topK,
                 filter=filter,
                 include_values=False,
-                include_metadata=includeMetadata,
+                include_metadata=includeMetadata or includeRelationships,
                 namespace=namespace or self._namespace,
             )
             matches = getattr(res, "matches", []) or res.get("matches", [])
@@ -80,11 +81,23 @@ class PineconeStore(BaseVectorStore):
                 mid = getattr(m, "id", None) or (m.get("id") if isinstance(m, dict) else None)
                 mscore = getattr(m, "score", None) or (m.get("score") if isinstance(m, dict) else None)
                 mmeta = getattr(m, "metadata", None) or (m.get("metadata") if isinstance(m, dict) else None)
+                metadata = dict(mmeta or {})
+                relationships = None
+                if includeRelationships and metadata:
+                    rels = metadata.get("_relationships")
+                    if isinstance(rels, dict):
+                        relationships = {}
+                        for rel_type, rel_value in rels.items():
+                            if isinstance(rel_value, dict) and "node_id" in rel_value:
+                                relationships[rel_type] = NodeRelationship.from_dict(rel_value)
+                            else:
+                                relationships[rel_type] = rel_value
                 out.append(
                     SearchResult(
                         id=str(mid),
                         score=float(mscore or 0.0),
-                        metadata=mmeta or {},
+                        metadata=metadata if includeMetadata else {},
+                        relationships=relationships,
                     )
                 )
             return out
@@ -122,3 +135,29 @@ class PineconeStore(BaseVectorStore):
         if isinstance(self._dimension, int):
             return self._dimension
         return 1536
+
+    def _build_metadata(
+        self,
+        chunk: VectorChunk,
+        namespace: Optional[str],
+    ) -> Dict[str, Any]:
+        """Prepare metadata payload with serialized relationships."""
+        metadata: Dict[str, Any] = dict(chunk.metadata)
+
+        if chunk.relationships:
+            serialized: Dict[str, Any] = {}
+            for rel_type, rel_obj in chunk.relationships.items():
+                if hasattr(rel_obj, "to_dict"):
+                    serialized[rel_type] = rel_obj.to_dict()
+                else:
+                    serialized[rel_type] = rel_obj
+            metadata["_relationships"] = serialized
+        elif getattr(chunk, "simple_relationships", None):
+            metadata["_relationships"] = chunk.simple_relationships
+
+        if namespace:
+            metadata["namespace"] = namespace
+        elif self._namespace:
+            metadata.setdefault("namespace", self._namespace)
+
+        return metadata
