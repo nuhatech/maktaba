@@ -1,7 +1,7 @@
 """Base LLM interface for agentic query generation and evaluation."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import AsyncIterator, Dict, List, Tuple
 
 from ..models import LLMUsage
 
@@ -13,7 +13,68 @@ class BaseLLM(ABC):
     Provides methods for:
     - Generating search queries from conversation history
     - Evaluating if retrieved sources can answer a question
+    - Producing generic text/json completions for deep research pipeline
     """
+
+    @abstractmethod
+    async def complete_text(
+        self,
+        *,
+        system: str,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> Tuple[str, LLMUsage]:
+        """
+        Generate a text completion with explicit system + user prompts.
+
+        Returns the generated text and usage information.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def complete_json(
+        self,
+        *,
+        system: str,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> Tuple[Dict[str, object], LLMUsage]:
+        """
+        Generate a JSON-formatted completion.
+
+        Implementations should request structured output from the provider and
+        return the parsed JSON object alongside usage metadata.
+        """
+        raise NotImplementedError
+
+    async def stream_text(
+        self,
+        *,
+        system: str,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> Tuple[AsyncIterator[str], LLMUsage]:
+        """
+        Stream text tokens for long-form generation.
+
+        Default implementation yields a single chunk from :meth:`complete_text`.
+        Providers with real streaming support should override this method.
+        """
+
+        text, usage = await self.complete_text(
+            system=system,
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        async def _generator() -> AsyncIterator[str]:
+            yield text
+
+        return _generator(), usage
 
     @abstractmethod
     async def generate_queries(

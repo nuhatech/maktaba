@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-10-27
+
+### Added
+- **Deep Research Pipeline** matching the full multi-stage research workflow (planning, iterative querying, summarisation, filtering, and streamed report generation).
+- Dedicated deep research configuration, prompt templates, and result container models for programmatic integration.
+- `create_deep_research_pipeline(...)` helper for one-call setup, plus accompanying guide (`docs/DeepResearch.md`) and runnable example script.
+
+### Changed
+- `BaseLLM` interface now exposes generic text/JSON completion utilities and a streaming hook; `OpenAILLM` implements the new methods for reuse across pipelines.
+
+### Tests
+- Introduced deep research pipeline unit coverage with fake LLM/query implementations (helper wiring, dedupe utilities, iteration budgets) and refreshed agentic pipeline mocks to honour the expanded interface.
+
 ## [0.1.6] - 2025-10-26
 
 ### Added
@@ -92,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/nuhatech/maktaba/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/nuhatech/maktaba/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/nuhatech/maktaba/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/nuhatech/maktaba/compare/v0.1.3...v0.1.4

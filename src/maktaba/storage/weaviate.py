@@ -61,7 +61,7 @@ class WeaviateStore(BaseVectorStore):
                     {"name": "metadata", "dataType": ["text"]},
                 ]:
                     if prop["name"] not in existing_props:
-                        self._client.schema.property.create(class_name, prop)  # type: ignore[attr-defined]
+                        self._client.schema.property.create(class_name, prop)
         except Exception as e:
             raise StorageError(f"Failed to initialize Weaviate: {str(e)}") from e
 

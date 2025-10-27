@@ -1,6 +1,6 @@
 """Tests for AgenticQueryPipeline."""
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import pytest
 
@@ -126,6 +126,26 @@ class DummyLLM(BaseLLM):
         self.usage_per_call = usage_per_call or LLMUsage(input_tokens=100, output_tokens=20)
         self.call_count_generate = 0
         self.call_count_evaluate = 0
+
+    async def complete_text(
+        self,
+        *,
+        system: str,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> Tuple[str, LLMUsage]:
+        return "", LLMUsage()
+
+    async def complete_json(
+        self,
+        *,
+        system: str,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int | None = None,
+    ) -> Tuple[Dict[str, Any], LLMUsage]:
+        return {}, LLMUsage()
 
     async def generate_queries(
         self,

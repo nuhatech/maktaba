@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml/badge.svg)](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/maktaba.svg)](https://badge.fury.io/py/maktaba)
+[![Version](https://img.shields.io/badge/version-0.1.7-blue.svg)](https://github.com/nuhatech/maktaba/releases)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -17,6 +18,7 @@
 - 🌍 **Multilingual**: Optimized for Arabic and international languages
 - 📊 **Type-safe**: Full type hints and Pydantic validation
 - 🧪 **Well-tested**: Comprehensive test coverage
+- 🔍 **Deep research**: Built-in iterative planning for long-form reports
 
 ## Installation
 
@@ -75,6 +77,30 @@ result = await pipeline.search(
 print(result["formatted_context"])  # [1]: content... [2]: content...
 print(result["citations"])          # [{id: 1, source: "...", score: 0.95}, ...]
 ```
+
+### Deep Research Pipeline
+
+```python
+from maktaba.pipeline import create_deep_research_pipeline
+from maktaba.embedding import OpenAIEmbedder
+from maktaba.storage import QdrantStore
+from maktaba.llm import OpenAILLM
+
+pipeline = create_deep_research_pipeline(
+    embedder=OpenAIEmbedder(api_key="..."),
+    store=QdrantStore(url="http://localhost:6333", collection_name="docs"),
+    llm=OpenAILLM(api_key="...", model="gpt-4o-mini"),
+)
+
+result = await pipeline.run_research("Impacts of lunar dust on spacecraft design")
+
+chunks = [chunk async for chunk in result.stream]
+print("".join(chunks))       # Final long-form report
+print(result.queries_used)   # Queries issued during research
+print(result.source_indices) # 1-based indices of retained sources
+```
+
+For a full walkthrough (configuration knobs, streaming, stage overrides), see `docs/DeepResearch.md` and `examples/deep_research_pipeline.py`.
 
 ## Development
 
