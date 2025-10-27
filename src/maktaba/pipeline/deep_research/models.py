@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import AsyncIterator, Iterable, List, Sequence
+from typing import Any, AsyncIterator, Iterable, List, Sequence
 
 from ...models import LLMUsage, SearchResult
 
@@ -41,13 +41,13 @@ class SearchResultView:
 
     id: str
     content: str
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None
 
     @classmethod
     def from_search_result(cls, result: SearchResult, *, content: str | None = None) -> "SearchResultView":
         return cls(
             id=result.id,
-            metadata=result.metadata or {},
+            metadata=(result.metadata or {}),
             content=content if content is not None else (result.text or ""),
         )
 

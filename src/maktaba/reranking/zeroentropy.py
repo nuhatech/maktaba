@@ -47,7 +47,7 @@ class ZeroEntropyReranker(BaseReranker):
         try:
             from zeroentropy import AsyncZeroEntropy
 
-            self._AsyncZeroEntropy = AsyncZeroEntropy  # type: ignore[assignment]
+            self._AsyncZeroEntropy = AsyncZeroEntropy
         except Exception:  # pragma: no cover - optional dependency
             pass
 

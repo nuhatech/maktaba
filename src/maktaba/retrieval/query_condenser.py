@@ -52,7 +52,7 @@ class OpenAIQueryCondenser(QueryCondenser):
         try:
             from openai import AsyncOpenAI
 
-            self._OpenAI = AsyncOpenAI  # type: ignore[assignment]
+            self._OpenAI = AsyncOpenAI
         except Exception:  # pragma: no cover - optional dependency
             pass
 

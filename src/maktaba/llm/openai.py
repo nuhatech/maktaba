@@ -62,7 +62,7 @@ class OpenAILLM(BaseLLM):
         try:
             from openai import AsyncOpenAI
 
-            self._OpenAI = AsyncOpenAI  # type: ignore[assignment]
+            self._OpenAI = AsyncOpenAI
         except ImportError:  # pragma: no cover
             self._logger.warning("openai package not installed; agentic mode unavailable")
 
