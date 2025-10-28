@@ -23,13 +23,13 @@ class OpenAILLM(BaseLLM):
     A good keyword search query contains one (or max two) words that are key to finding the result.
     A good semantic search query is a complete question or phrase that captures the user's intent.
 
-    The results should be returned in JSON format:
+    The results should be returned in json format:
     {{"queries": [{{"type": "keyword", "query": "..."}}, {{"type": "semantic", "query": "..."}}]}}"""
 
     EVALUATE_SOURCES_PROMPT = """You are a research assistant. You will be provided with a chat history and a list of sources.
     Evaluate if the sources contain sufficient information to answer the user's question.
 
-    Return your evaluation in JSON format:
+    Return your evaluation in json format:
     {{"canAnswer": true}} or {{"canAnswer": false}}
 
     Only return true if the sources directly contain the information needed to provide a comprehensive answer."""

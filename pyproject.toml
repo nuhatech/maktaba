@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.7"
+version = "0.1.8"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -89,7 +89,10 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 filterwarnings = [
-    "ignore::pydantic._internal._generate_schema.UnsupportedFieldAttributeWarning"
+    "ignore::UserWarning:pydantic.*"
+]
+markers = [
+    "integration: marks tests that hit live external services"
 ]
 
 [tool.ruff]
@@ -121,3 +124,4 @@ module = [
     "supabase.*",
 ]
 ignore_missing_imports = true
+

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-10-28
+
+### Changed
+- Update OpenAI JSON prompts to satisfy OpenAI's json requirement.
+- Added opt-in OpenAI integration tests covering planning and full pipeline flows.
+
+### Tests
+- New prompt regression test ensures json is retained in default templates.
+- Added streaming test exercising the full deep research pipeline with stubbed search results.
+
 ## [0.1.7] - 2025-10-27
 
 ### Added
@@ -105,7 +115,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/nuhatech/maktaba/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/nuhatech/maktaba/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/nuhatech/maktaba/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/nuhatech/maktaba/compare/v0.1.4...v0.1.5
@@ -113,3 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0
+
+
+
+

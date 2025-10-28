@@ -56,6 +56,8 @@ def default_prompts(now: datetime | None = None) -> DeepResearchPrompts:
                 - Designed to progress logically from foundational to specific information
 
                 It's perfectly acceptable to start with exploratory queries to "test the waters" before diving deeper. Initial queries can help establish baseline information or verify assumptions before proceeding to more targeted searches.
+
+                Return your plan as a json object with a single key "queries" containing the ordered search strings.
             """
         ),
         now,
@@ -66,6 +68,8 @@ def default_prompts(now: datetime | None = None) -> DeepResearchPrompts:
             """
                 You are a research assistant, you will be provided with a plan of action to research a topic, identify the queries that we should run to search for the topic. Look carefully
                 at the general plan provided and identify the key queries that we should run. For dependent queries (those requiring results from earlier searches), leave them for later execution and focus only on the self-contained queries that can be run immediately.
+
+                Output a json object that mirrors the schema {"queries": ["..."]} and only include queries that can be executed immediately.
             """
         ),
         now,
@@ -131,7 +135,9 @@ def default_prompts(now: datetime | None = None) -> DeepResearchPrompts:
     evaluation_parsing_prompt = _with_context(
         dedent(
             """
-                    You are a research assistant, you will be provided with a some reasoning and a list of queries, and you will need to parse the list into a list of queries.
+                You are a research assistant, you will be provided with a some reasoning and a list of queries, and you will need to parse the list into a list of queries.
+
+                Respond strictly with a json object in the form {"queries": ["..."]}.
             """
         ),
         now,
@@ -167,6 +173,8 @@ def default_prompts(now: datetime | None = None) -> DeepResearchPrompts:
                 You are a research assistant, you will be provided with a relevance analysis of the search results.
 
                 You need to return a list of source numbers corresponding to the search results, in the order of relevance to the research topic.
+
+                Your reply must be a json object that follows {"sources": [1, 2, 3]} and contains only integers.
             """
         ),
         now,
