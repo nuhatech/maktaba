@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.7"
+version = "0.1.8"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -124,3 +124,4 @@ module = [
     "supabase.*",
 ]
 ignore_missing_imports = true
+
