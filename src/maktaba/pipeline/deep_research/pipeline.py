@@ -117,14 +117,14 @@ class DeepResearchPipeline:
         return [q for q in plan.queries if q]
 
     async def _perform_search(self, queries: Sequence[str]) -> SearchResultsCollection:
-        tasks = [self._web_search(query) for query in queries]
+        tasks = [self._search_corpus(query) for query in queries]
         results = await asyncio.gather(*tasks)
         combined = SearchResultsCollection.empty()
         for result in results:
             combined = combined.add(result)
         return combined.dedup()
 
-    async def _web_search(self, query: str) -> SearchResultsCollection:
+    async def _search_corpus(self, query: str) -> SearchResultsCollection:
         truncated_query = query[:400]
         if len(query) > 400:
             LOGGER.debug("deep_research.query truncated original_len=%d", len(query))
