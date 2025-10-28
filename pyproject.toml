@@ -89,7 +89,10 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 filterwarnings = [
-    "ignore::pydantic._internal._generate_schema.UnsupportedFieldAttributeWarning"
+    "ignore::UserWarning:pydantic.*"
+]
+markers = [
+    "integration: marks tests that hit live external services"
 ]
 
 [tool.ruff]
