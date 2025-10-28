@@ -79,7 +79,7 @@ print(result["citations"])          # [{id: 1, source: "...", score: 0.95}, ...]
 ```
 
 ### Deep Research Pipeline
-Learn how to customise the default prompts via [`maktaba_templates.md`](./maktaba_templates.md).
+Learn how to customise the default prompts via [`maktaba_templates.md`](./docs/Templates.md).
 
 
 ```python
