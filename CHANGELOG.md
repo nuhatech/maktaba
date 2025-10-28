@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-10-28
+
+### Added
+- Exposed context and per-stage append hooks in `default_prompts(...)` so downstream apps can tailor guidance without copying templates.
+- Added `maktaba_templates.md` with examples for Kutub-style deployments.
+
+### Changed
+- README now links to the prompt customisation guide.
+
+### Tests
+- Added coverage verifying custom context/append hooks propagate through prompts.
+
 ## [0.1.8] - 2025-10-28
 
 ### Changed
@@ -115,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.9...HEAD
 [0.1.8]: https://github.com/nuhatech/maktaba/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/nuhatech/maktaba/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/nuhatech/maktaba/compare/v0.1.5...v0.1.6
