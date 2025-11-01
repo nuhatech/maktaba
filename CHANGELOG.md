@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2025-11-01
+
+### Changed
+- Fixed argument error in `SupabaseKeywordStore`'s search method.
+- Added configurable `language` option for Supabase full-text search.
+- Use PostgreSQL web search syntax for full-text queries in Supabase keyword store.
+
 ## [0.1.9] - 2025-10-28
 
 ### Added
@@ -127,7 +134,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.9...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/nuhatech/maktaba/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/nuhatech/maktaba/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/nuhatech/maktaba/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/nuhatech/maktaba/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/nuhatech/maktaba/compare/v0.1.5...v0.1.6
