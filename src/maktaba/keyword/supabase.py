@@ -67,6 +67,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
         search_vector_column: str = "search_vector",
         id_column: str = "id",
         metadata_columns: Optional[List[str]] = None,
+        language: str = "english",
     ):
         """
         Initialize Supabase keyword store.
@@ -108,6 +109,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
         self.search_vector_column = search_vector_column
         self.id_column = id_column
         self.metadata_columns = metadata_columns or []
+        self.language = language
 
     async def search(
         self,
@@ -150,7 +152,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
             query_builder = query_builder.text_search(
                 column=self.search_vector_column,
                 query=query,
-                config="english",  # Language configuration
+                options={"config": self.language, "type": "websearch"},
             )
 
             # Add namespace filter if provided
