@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2025-11-02
+
+### Changed
+- **Provider-independent LLM prompts**: Refactored agentic LLM prompts to be provider-independent and user-customizable:
+  - Created `maktaba.llm.prompts` module with `AgenticPrompts` dataclass and `default_prompts()` function
+  - Moved hardcoded prompts from `OpenAILLM` class to separate prompts module
+  - Added `prompts` parameter to `OpenAILLM` and `AgenticQueryPipeline` for customization
+  - Users can now override prompts or add custom context, similar to deep research pipeline
+  - Example: `default_prompts(context="Searching medical texts", generate_queries_append="Focus on evidence-based queries")`
+  - This prepares the codebase for additional LLM providers (Bedrock, Anthropic, etc.)
+
 ## [0.1.12] - 2025-11-02
 
 ### Fixed
+- **Supabase keyword search method chaining**: Fixed `AttributeError: 'SyncQueryRequestBuilder' object has no attribute 'limit'` by reordering the query builder chain to call `limit()` and filter methods before `text_search()`. The query execution order remains correct—PostgREST applies all filters first, then limits results.
 - **PostgreSQL tsquery syntax error with quoted queries**: Fixed `syntax error in tsquery` (error code 42601) that occurred when LLM-generated queries contained surrounding quotes (e.g., `"tawaf ablution"`). The search method now strips surrounding quotes from queries before passing them to PostgreSQL's `websearch_to_tsquery`, preventing malformed tsquery syntax.
 
 ### Added
@@ -152,7 +164,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.12...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.13...HEAD
+[0.1.13]: https://github.com/nuhatech/maktaba/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/nuhatech/maktaba/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/nuhatech/maktaba/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/nuhatech/maktaba/compare/v0.1.9...v0.1.10

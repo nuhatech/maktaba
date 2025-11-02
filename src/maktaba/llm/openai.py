@@ -6,6 +6,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 from ..logging import get_logger
 from ..models import LLMUsage
 from .base import BaseLLM
+from .prompts import AgenticPrompts, default_prompts
 
 
 class OpenAILLM(BaseLLM):
@@ -14,25 +15,19 @@ class OpenAILLM(BaseLLM):
 
     Uses OpenAI's Chat Completions API for query generation and evaluation.
     Falls back gracefully if OpenAI is unavailable.
+
+    Example:
+        # Use default prompts
+        llm = OpenAILLM(api_key="sk-...")
+
+        # Customize prompts
+        from maktaba.llm.prompts import default_prompts
+        custom_prompts = default_prompts(
+            context="You are searching a medical knowledge base.",
+            generate_queries_append="Focus on evidence-based queries."
+        )
+        llm = OpenAILLM(api_key="sk-...", prompts=custom_prompts)
     """
-
-    GENERATE_QUERIES_PROMPT = """Given a user question (or a chat history), list the appropriate search queries to find answers.
-
-    There are two types of search: keyword search and semantic search. You should return a maximum of {max_queries} queries.
-
-    A good keyword search query contains one (or max two) words that are key to finding the result.
-    A good semantic search query is a complete question or phrase that captures the user's intent.
-
-    The results should be returned in json format:
-    {{"queries": [{{"type": "keyword", "query": "..."}}, {{"type": "semantic", "query": "..."}}]}}"""
-
-    EVALUATE_SOURCES_PROMPT = """You are a research assistant. You will be provided with a chat history and a list of sources.
-    Evaluate if the sources contain sufficient information to answer the user's question.
-
-    Return your evaluation in json format:
-    {{"canAnswer": true}} or {{"canAnswer": false}}
-
-    Only return true if the sources directly contain the information needed to provide a comprehensive answer."""
 
     def __init__(
         self,
@@ -40,6 +35,7 @@ class OpenAILLM(BaseLLM):
         model: str = "gpt-4o-mini",
         temperature: float = 0.0,
         timeout_s: float = 30.0,
+        prompts: Optional[AgenticPrompts] = None,
     ) -> None:
         """
         Initialize OpenAI LLM.
@@ -49,11 +45,13 @@ class OpenAILLM(BaseLLM):
             model: Model name (default: gpt-4o-mini for cost efficiency)
             temperature: Sampling temperature (default: 0 for deterministic)
             timeout_s: Request timeout in seconds
+            prompts: Custom prompts for agentic operations (defaults to default_prompts())
         """
         self.api_key = api_key
         self.model = model
         self.temperature = temperature
         self.timeout_s = timeout_s
+        self.prompts = prompts or default_prompts()
         self._logger = get_logger("maktaba.llm.openai")
 
         # Lazy client initialization
@@ -250,7 +248,7 @@ class OpenAILLM(BaseLLM):
 
             # Call OpenAI
             result, usage = await self.complete_json(
-                system=self.GENERATE_QUERIES_PROMPT.format(max_queries=max_queries),
+                system=self.prompts.generate_queries_prompt.format(max_queries=max_queries),
                 prompt=user_prompt,
                 temperature=self.temperature,
             )
@@ -293,7 +291,7 @@ class OpenAILLM(BaseLLM):
 
         try:
             result, usage = await self.complete_json(
-                system=self.EVALUATE_SOURCES_PROMPT,
+                system=self.prompts.evaluate_sources_prompt,
                 prompt=user_prompt,
                 temperature=self.temperature,
             )
