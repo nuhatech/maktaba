@@ -8,6 +8,7 @@ from ..embedding.base import BaseEmbedder
 from ..keyword.base import BaseKeywordStore
 from ..llm.base import BaseLLM
 from ..llm.openai import OpenAILLM
+from ..llm.prompts import AgenticPrompts
 from ..logging import get_logger
 from ..models import LLMUsage, SearchResult
 from ..reranking.base import BaseReranker
@@ -40,6 +41,7 @@ class AgenticQueryPipeline:
         llm: Optional[BaseLLM] = None,
         llm_api_key: Optional[str] = None,
         llm_model: str = "gpt-4o-mini",
+        prompts: Optional[AgenticPrompts] = None,
         namespace: Optional[str] = None,
     ) -> None:
         """
@@ -53,7 +55,24 @@ class AgenticQueryPipeline:
             llm: LLM for query generation/evaluation (defaults to OpenAI)
             llm_api_key: API key for LLM (if not using default)
             llm_model: LLM model name
+            prompts: Custom prompts for LLM operations (defaults to default_prompts())
             namespace: Default namespace for searches
+
+        Example:
+            # Use default prompts
+            pipeline = AgenticQueryPipeline(embedder, store, llm_api_key="sk-...")
+
+            # Customize prompts
+            from maktaba.llm.prompts import default_prompts
+            custom_prompts = default_prompts(
+                context="Searching Islamic texts",
+                generate_queries_append="Focus on classical sources."
+            )
+            pipeline = AgenticQueryPipeline(
+                embedder, store,
+                llm_api_key="sk-...",
+                prompts=custom_prompts
+            )
         """
         self.embedder = embedder
         self.store = store
@@ -66,7 +85,7 @@ class AgenticQueryPipeline:
         if llm is not None:
             self.llm = llm
         else:
-            self.llm = OpenAILLM(api_key=llm_api_key, model=llm_model)
+            self.llm = OpenAILLM(api_key=llm_api_key, model=llm_model, prompts=prompts)
 
     async def _execute_single_query(
         self,

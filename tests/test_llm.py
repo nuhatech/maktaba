@@ -291,3 +291,53 @@ async def test_openai_llm_usage_tracking_accuracy():
         assert usage.input_tokens == 1234
         assert usage.output_tokens == 567
         assert usage.total_tokens == 1801
+
+
+@pytest.mark.asyncio
+async def test_openai_llm_custom_prompts():
+    """Test that custom prompts are used correctly."""
+    from maktaba.llm.prompts import default_prompts
+
+    with patch("openai.AsyncOpenAI") as MockOpenAI:
+        mock_client = AsyncMock()
+        MockOpenAI.return_value = mock_client
+
+        # Mock the API response
+        mock_response = MagicMock()
+        mock_response.usage.prompt_tokens = 100
+        mock_response.usage.completion_tokens = 20
+        mock_response.choices = [
+            MagicMock(
+                message=MagicMock(
+                    content=json.dumps({
+                        "queries": [{"type": "keyword", "query": "medical"}]
+                    })
+                )
+            )
+        ]
+
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        # Create custom prompts with additional context
+        custom_prompts = default_prompts(
+            context="You are searching a medical knowledge base.",
+            generate_queries_append="Focus on evidence-based medical queries."
+        )
+
+        # Create LLM with custom prompts
+        llm = OpenAILLM(api_key="test-key", prompts=custom_prompts)
+
+        # Generate queries
+        queries, usage = await llm.generate_queries(
+            messages=[("user", "What causes diabetes?")],
+            existing_queries=[],
+            max_queries=5,
+        )
+
+        # Verify the system prompt contains our custom context
+        call_args = mock_client.chat.completions.create.call_args
+        system_prompt = call_args.kwargs["messages"][0]["content"]
+
+        assert "medical knowledge base" in system_prompt
+        assert "evidence-based medical queries" in system_prompt
+        assert queries == [{"type": "keyword", "query": "medical"}]

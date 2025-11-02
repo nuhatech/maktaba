@@ -14,6 +14,23 @@ class BaseLLM(ABC):
     - Generating search queries from conversation history
     - Evaluating if retrieved sources can answer a question
     - Producing generic text/json completions for deep research pipeline
+
+    Implementations should accept an optional `prompts` parameter in their constructor
+    to allow users to customize the prompts used for query generation and source evaluation.
+    See `maktaba.llm.prompts.AgenticPrompts` and `maktaba.llm.prompts.default_prompts()`.
+
+    Example:
+        from maktaba.llm import OpenAILLM, default_prompts
+
+        # Use default prompts
+        llm = OpenAILLM(api_key="sk-...")
+
+        # Customize prompts
+        custom_prompts = default_prompts(
+            context="You are searching a medical knowledge base.",
+            generate_queries_append="Focus on evidence-based queries."
+        )
+        llm = OpenAILLM(api_key="sk-...", prompts=custom_prompts)
     """
 
     @abstractmethod
