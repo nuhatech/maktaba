@@ -147,13 +147,8 @@ class SupabaseKeywordStore(BaseKeywordStore):
                 ", ".join(select_columns)
             )
 
-            # Add full-text search filter using textSearch
-            # Supabase's textSearch uses ts_rank internally
-            query_builder = query_builder.text_search(
-                column=self.search_vector_column,
-                query=query,
-                options={"config": self.language, "type": "websearch"},
-            )
+            # Add limit early (before text_search)
+            query_builder = query_builder.limit(limit)
 
             # Add namespace filter if provided
             if namespace:
@@ -164,8 +159,14 @@ class SupabaseKeywordStore(BaseKeywordStore):
                 for key, value in filter.items():
                     query_builder = query_builder.eq(key, value)
 
-            # Limit results
-            query_builder = query_builder.limit(limit)
+            # Add full-text search filter using textSearch
+            # Note: text_search() must be called LAST before execute()
+            # because it returns SyncQueryRequestBuilder which only has execute()
+            query_builder = query_builder.text_search(
+                column=self.search_vector_column,
+                query=query,
+                options={"config": self.language, "type": "websearch"},
+            )
 
             # Execute query
             response = query_builder.execute()
