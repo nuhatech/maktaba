@@ -2307,16 +2307,16 @@ wheels = [
 
 [[package]]
 name = "llama-index-workflows"
-version = "2.10.1"
+version = "2.10.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-instrumentation" },
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/f4/008f5c239b3c7b62d333791fdcf394f0b05172fd456e73148450e01c4806/llama_index_workflows-2.10.1.tar.gz", hash = "sha256:4c3ba30aef500f3f8881d52db904505d2363728962dc0f2fa0a683e169117db9", size = 5235763, upload-time = "2025-11-02T00:41:23.026Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/89/d20be807ba2abe14de3e65289e220894dd34aacc005adaae7b88dcdbc1c1/llama_index_workflows-2.10.2.tar.gz", hash = "sha256:34c85153195d3bbf5c3b55e5bd68f92c9d71980609a505f04f1dc98b6cc9642f", size = 5236084, upload-time = "2025-11-02T01:17:54.95Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c3/0e/d0c8bdbb67abd650007f21d886c5090311833ca28ef62f574eee38e094ef/llama_index_workflows-2.10.1-py3-none-any.whl", hash = "sha256:0a4954218b1ef444f326beadc0e58c9600a83a0ddc9eb2b4f3c29fac2b44537c", size = 90607, upload-time = "2025-11-02T00:41:21.516Z" },
+    { url = "https://files.pythonhosted.org/packages/38/4f/2a69f208e068e9c809c98e122877198b0345a359ea4004c30e5d0be415a8/llama_index_workflows-2.10.2-py3-none-any.whl", hash = "sha256:3632fdb6bfab8197025b943f915bc6daef9697c201cb27a9e557884b07a5012c", size = 90714, upload-time = "2025-11-02T01:17:53.083Z" },
 ]
 
 [[package]]
@@ -2445,7 +2445,7 @@ wheels = [
 
 [[package]]
 name = "maktaba"
-version = "0.1.11"
+version = "0.1.12"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

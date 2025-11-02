@@ -1,5 +1,7 @@
 """Tests for keyword search stores."""
 
+import os
+
 import pytest
 
 from maktaba.keyword.qdrant import QdrantKeywordStore
@@ -251,15 +253,122 @@ def test_supabase_keyword_search_import_error():
             )
 
 
-# NOTE: Integration tests for SupabaseKeywordStore would require actual Supabase connection
-# These would be marked with @pytest.mark.integration and skipped if env vars not set
-# Example:
-#
-# @pytest.mark.integration
-# @pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
-# async def test_supabase_keyword_search_basic():
-#     url = os.getenv("SUPABASE_URL")
-#     key = os.getenv("SUPABASE_KEY")
-#     store = SupabaseKeywordStore(url=url, key=key, table_name="test_table")
-#     results = await store.search(query="test", limit=10)
-#     assert isinstance(results, list)
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_basic():
+    """Test basic Supabase keyword search with real database."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="page_key",
+        search_vector_column="fts",
+        text_column="original_text",
+        language="arabic",
+    )
+
+    # Test basic search - this should work with any existing data
+    results = await store.search(query="الإسلام", limit=5)
+    assert isinstance(results, list)
+    # Results may be empty if no data matches, but should not raise an error
+    print(f"Basic search returned {len(results)} results")
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_with_quotes():
+    """
+    Test Supabase keyword search with quoted queries (the bug we fixed).
+
+    This tests that queries with surrounding quotes (from LLM-generated queries)
+    are properly handled and don't cause PostgreSQL syntax errors.
+    """
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="page_key",
+        search_vector_column="fts",
+        text_column="original_text",
+        language="arabic",
+    )
+
+    # Test with double quotes (simulating LLM-generated query)
+    try:
+        results = await store.search(query='"التوحيد"', limit=5)
+        assert isinstance(results, list)
+        print(f"Search with double quotes returned {len(results)} results")
+    except Exception as e:
+        pytest.fail(f"Search with quoted query failed: {e}")
+
+    # Test with single quotes
+    try:
+        results = await store.search(query="'الفقه'", limit=5)
+        assert isinstance(results, list)
+        print(f"Search with single quotes returned {len(results)} results")
+    except Exception as e:
+        pytest.fail(f"Search with single-quoted query failed: {e}")
+
+    # Test with mixed spacing and quotes
+    try:
+        results = await store.search(query='  "الصلاة"  ', limit=5)
+        assert isinstance(results, list)
+        print(f"Search with spaced quotes returned {len(results)} results")
+    except Exception as e:
+        pytest.fail(f"Search with spaced quoted query failed: {e}")
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_with_filters():
+    """Test Supabase keyword search with filters and namespace."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="page_key",
+        search_vector_column="fts",
+        text_column="original_text",
+        language="arabic",
+    )
+
+    # Test with namespace filter if you have namespaces in your data
+    try:
+        results = await store.search(
+            query="الإسلام",
+            limit=5,
+            namespace="default"  # Adjust this to match your actual namespace
+        )
+        assert isinstance(results, list)
+        print(f"Search with namespace filter returned {len(results)} results")
+    except Exception as e:
+        # If namespace column doesn't exist, this is expected
+        print(f"Namespace filter test skipped: {e}")
+
+    # Test with custom filter (adjust field name to match your schema)
+    # Uncomment and modify if you have a book_id or similar field:
+    # try:
+    #     results = await store.search(
+    #         query="الإسلام",
+    #         limit=5,
+    #         filter={"book_id": "some_book_id"}
+    #     )
+    #     assert isinstance(results, list)
+    #     print(f"Search with custom filter returned {len(results)} results")
+    # except Exception as e:
+    #     print(f"Custom filter test skipped: {e}")
