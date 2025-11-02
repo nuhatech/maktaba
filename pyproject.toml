@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.13"
+version = "0.1.14"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -45,6 +45,11 @@ unstructured = [
     "unstructured[all-docs]>=0.16",
     "python-magic>=0.4; platform_system != 'Windows'",
     "python-magic-bin>=0.4; platform_system == 'Windows'",
+]
+unstructured-minimal = [
+    "llama-index-core>=0.12",
+    "llama-index-readers-file>=0.4",
+    "unstructured>=0.16",
 ]
 all = [
     "openai>=1.0",

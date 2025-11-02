@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2025-11-02
+
+### Added
+- **Lightweight unstructured chunking option**: Added `unstructured-minimal` extra dependency for users who only need text chunking via llama-index without PDF/OCR/document processing dependencies:
+  - `maktaba[unstructured-minimal]` installs base `unstructured` package (no `[all-docs]` extra)
+  - Suitable for text-only workflows that don't require PDF parsing, OCR, or image processing
+  - Existing `maktaba[unstructured]` extra remains available for full document processing support
+
 ## [0.1.13] - 2025-11-02
 
 ### Changed
@@ -164,7 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.13...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.14...HEAD
+[0.1.14]: https://github.com/nuhatech/maktaba/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/nuhatech/maktaba/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/nuhatech/maktaba/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/nuhatech/maktaba/compare/v0.1.10...v0.1.11
