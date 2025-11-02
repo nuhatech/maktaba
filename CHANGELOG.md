@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2025-11-02
+
+### Fixed
+- **PostgreSQL tsquery syntax error with quoted queries**: Fixed `syntax error in tsquery` (error code 42601) that occurred when LLM-generated queries contained surrounding quotes (e.g., `"tawaf ablution"`). The search method now strips surrounding quotes from queries before passing them to PostgreSQL's `websearch_to_tsquery`, preventing malformed tsquery syntax.
+
+### Added
+- **Integration tests for Supabase keyword search**: Added comprehensive integration tests for `SupabaseKeywordStore` that verify:
+  - Basic keyword search functionality with real Supabase database
+  - Quoted query handling (testing the syntax error fix)
+  - Namespace and filter parameter support
+  - Tests are marked with `@pytest.mark.integration` and can be run with environment variables (`SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_TABLE_NAME`)
+
 ## [0.1.11] - 2025-11-02
 
 ### Fixed
@@ -140,7 +152,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.11...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.12...HEAD
+[0.1.12]: https://github.com/nuhatech/maktaba/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/nuhatech/maktaba/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/nuhatech/maktaba/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/nuhatech/maktaba/compare/v0.1.8...v0.1.9

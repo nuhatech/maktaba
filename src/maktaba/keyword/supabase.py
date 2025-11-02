@@ -162,9 +162,11 @@ class SupabaseKeywordStore(BaseKeywordStore):
             # Add full-text search filter using textSearch
             # Note: text_search() must be called LAST before execute()
             # because it returns SyncQueryRequestBuilder which only has execute()
+            # Strip surrounding quotes if present (from LLM-generated queries)
+            clean_query = query.strip().strip('"').strip("'")
             query_builder = query_builder.text_search(
                 column=self.search_vector_column,
-                query=query,
+                query=clean_query,
                 options={"config": self.language, "type": "websearch"},
             )
 
