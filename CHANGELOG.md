@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2025-11-02
+
+### Fixed
+- Supabase attribute error fixed. The method chain now calls `limit()` before `text_search()`, which resolves the AttributeError. The query will still execute correctly—PostgREST applies filters first, then limits results.
+
+
 ## [0.1.10] - 2025-11-01
 
 ### Changed
@@ -134,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/nuhatech/maktaba/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/nuhatech/maktaba/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/nuhatech/maktaba/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/nuhatech/maktaba/compare/v0.1.7...v0.1.8
