@@ -167,7 +167,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
             query_builder = query_builder.text_search(
                 column=self.search_vector_column,
                 query=clean_query,
-                options={"config": self.language, "type": "websearch"},
+                options={"config": self.language, "type": "web_search"},
             )
 
             # Execute query
