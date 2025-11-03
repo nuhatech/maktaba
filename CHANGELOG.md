@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15] - 2025-11-02
+
+### Fixed
+- **Supabase keyword search PostgREST query type**: Fixed incorrect parameter value in `SupabaseKeywordStore.search()` that caused failures with multi-word queries:
+  - Changed `options={"type": "websearch"}` to `options={"type": "web_search"}` (with underscore)
+  - PostgREST requires `"web_search"` to generate `wfts` (websearch_to_tsquery) for proper multi-word query handling
+  - The incorrect `"websearch"` (without underscore) caused fallback to plain `fts` (to_tsquery), which fails on queries with spaces
+  - This fix ensures multi-word queries are properly processed by PostgreSQL's `websearch_to_tsquery` function
+
 ## [0.1.14] - 2025-11-02
 
 ### Added
@@ -172,7 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.14...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.15...HEAD
+[0.1.15]: https://github.com/nuhatech/maktaba/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/nuhatech/maktaba/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/nuhatech/maktaba/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/nuhatech/maktaba/compare/v0.1.11...v0.1.12
