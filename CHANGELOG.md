@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16] - 2025-11-14
+
+### Added
+- **Parallel keyword search in QueryPipeline**: Added optional parallel keyword search support to `QueryPipeline`:
+  - New `keyword_store` parameter in `QueryPipeline.__init__()` for full-text search integration
+  - New `keyword_queries` parameter in `QueryPipeline.search()` to specify keyword queries for parallel execution
+  - New `keyword_limit` parameter to control number of results per keyword query (default: 15)
+  - Semantic and keyword searches execute in parallel using `asyncio.gather()` for improved performance
+  - Results are automatically deduplicated by chunk ID (semantic results take priority)
+  - Combined results are reranked together when reranking is enabled
+  - Backward compatible: existing code continues to work without keyword search
+  - User-provided keyword queries (no LLM dependency required, unlike AgenticQueryPipeline)
+
+### Tests
+- Comprehensive test suite for parallel keyword search in QueryPipeline:
+  - Basic parallel execution test
+  - Deduplication and priority handling tests
+  - Error handling and edge case tests
+  - Multiple keyword queries parallel execution test
+  - Namespace and filter parameter propagation test
+  - Combined reranking test
+  - Integration test with real Qdrant stores
+
 ## [0.1.15] - 2025-11-02
 
 ### Fixed
@@ -181,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.15...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.16...HEAD
+[0.1.16]: https://github.com/nuhatech/maktaba/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/nuhatech/maktaba/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/nuhatech/maktaba/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/nuhatech/maktaba/compare/v0.1.12...v0.1.13
