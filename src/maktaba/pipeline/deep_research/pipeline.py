@@ -113,7 +113,11 @@ class DeepResearchPipeline:
             prompt=f"Research Topic: {topic}",
         )
         self._usage = self._usage + usage
-        plan = ResearchPlan.from_iterable(payload.get("queries", []))
+        queries_raw = payload.get("queries", [])
+        # Type check: ensure queries is a list
+        if not isinstance(queries_raw, list):
+            queries_raw = []
+        plan = ResearchPlan.from_iterable(queries_raw)
         return [q for q in plan.queries if q]
 
     async def _perform_search(self, queries: Sequence[str]) -> SearchResultsCollection:
@@ -221,7 +225,11 @@ class DeepResearchPipeline:
             prompt=f"Evaluation to be parsed: {evaluation_text}",
         )
         self._usage = self._usage + usage_json
-        plan = ResearchPlan.from_iterable(parsed.get("queries", []))
+        queries_raw = parsed.get("queries", [])
+        # Type check: ensure queries is a list
+        if not isinstance(queries_raw, list):
+            queries_raw = []
+        plan = ResearchPlan.from_iterable(queries_raw)
         return [q for q in plan.queries if q]
 
     async def _filter_results(
@@ -245,7 +253,11 @@ class DeepResearchPipeline:
         )
         self._usage = self._usage + usage_parsed
 
-        source_list = SourceList.from_iterable(parsed.get("sources", []))
+        sources_raw = parsed.get("sources", [])
+        # Type check: ensure sources is a list
+        if not isinstance(sources_raw, list):
+            sources_raw = []
+        source_list = SourceList.from_iterable(sources_raw)
         sources = source_list.sources
         if self.config.max_sources and self.config.max_sources > 0:
             sources = sources[: self.config.max_sources]

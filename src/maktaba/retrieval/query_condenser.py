@@ -148,7 +148,7 @@ class CohereQueryCondenser(QueryCondenser):
 
             self._cohere = cohere
         except Exception:  # pragma: no cover - optional dependency
-            self._cohere = None  # type: ignore
+            self._cohere = None
 
     def _build_prompts(self, history: List[Tuple[str, str]], last: str) -> str:
         recent = history[-self.max_history :] if self.max_history > 0 else history

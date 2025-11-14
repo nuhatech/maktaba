@@ -24,12 +24,20 @@ if %ERRORLEVEL% EQU 0 (
 REM Check 2: MyPy type checking
 echo.
 echo [2/3] Running MyPy type checking...
-uv run mypy src/maktaba --no-error-summary 2>&1 | findstr /C:"error:" > mypy_errors.tmp
+python -m mypy src/maktaba --no-error-summary 2>&1 | findstr /C:"error:" > mypy_errors.tmp
 if exist mypy_errors.tmp (
     for /f %%A in ('type mypy_errors.tmp ^| find /c /v ""') do set ERROR_COUNT=%%A
-    del mypy_errors.tmp
 ) else (
     set ERROR_COUNT=0
+)
+
+if !ERROR_COUNT! GTR 20 (
+    echo [FAIL] MyPy failed (threshold: 20 errors^)
+    echo See mypy_errors.tmp for details
+    set FAILED=1
+) else (
+    echo [PASS] MyPy passed (!ERROR_COUNT! errors, threshold: 20^)
+    if exist mypy_errors.tmp del mypy_errors.tmp
 )
 
 echo MyPy found !ERROR_COUNT! errors

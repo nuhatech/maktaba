@@ -326,6 +326,11 @@ class AgenticQueryPipeline:
                     self._logger.error(f"Query {idx} failed: {result}")
                     continue
 
+                # Type check: result should be List[SearchResult] at this point
+                if not isinstance(result, list):
+                    self._logger.warning(f"Query {idx} returned unexpected type: {type(result)}")
+                    continue
+
                 # Track query -> result mapping for debugging
                 query_text = new_queries[idx].get("query", "")
                 query_to_result[query_text] = result
@@ -337,7 +342,7 @@ class AgenticQueryPipeline:
 
             self._logger.info(
                 f"agentic_search.iter_{iteration}: parallel execution complete, "
-                f"retrieved {sum(len(r) if not isinstance(r, Exception) else 0 for r in results_list)} chunks, "
+                f"retrieved {sum(len(r) if isinstance(r, list) else 0 for r in results_list)} chunks, "
                 f"total unique: {len(all_chunks)}"
             )
 

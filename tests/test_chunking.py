@@ -25,20 +25,111 @@ async def test_basic_text_chunking():
 # Test 2: Chunking with overlap parameter
 @pytest.mark.asyncio
 async def test_chunking_with_overlap():
-    """Test chunking with overlap parameter."""
+    """Test chunking with overlap parameter - comprehensive verification."""
+    # Create a long text with unique markers to verify overlap
+    # Use a repeating pattern that's longer than typical chunk size
+    base_text = "Sentence A. Sentence B. Sentence C. Sentence D. "
+    text = base_text * 50  # Create long text that will be chunked
+
+    # Test without overlap first
+    chunker_no_overlap = UnstructuredChunker(
+        strategy="fast",
+        chunking_strategy="basic",
+        overlap=None,
+        new_after_n_chars=200,  # Force chunking at ~200 chars
+    )
+    result_no_overlap = await chunker_no_overlap.chunk_text(text, filename="test.txt")
+
+    # Test with overlap
+    overlap_amount = 50
+    chunker_with_overlap = UnstructuredChunker(
+        strategy="fast",
+        chunking_strategy="basic",
+        overlap=overlap_amount,
+        new_after_n_chars=200,  # Same chunking target
+    )
+    result_with_overlap = await chunker_with_overlap.chunk_text(text, filename="test.txt")
+
+    # Basic assertions
+    assert result_no_overlap is not None
+    assert result_with_overlap is not None
+    assert result_no_overlap.total_chunks > 0
+    assert result_with_overlap.total_chunks > 0
+    assert result_no_overlap.documents is not None
+    assert result_with_overlap.documents is not None
+
+    # With overlap, we should have more chunks (or at least same number)
+    # because overlap creates additional chunks at boundaries
+    assert result_with_overlap.total_chunks >= result_no_overlap.total_chunks
+
+    # Verify overlap is actually happening between consecutive chunks
+    chunks = result_with_overlap.documents
+    if len(chunks) > 1:
+        overlap_found = False
+        for i in range(len(chunks) - 1):
+            chunk1_text = chunks[i].text or ""
+            chunk2_text = chunks[i + 1].text or ""
+
+            if not chunk1_text or not chunk2_text:
+                continue
+
+            # Check if the end of chunk1 overlaps with the start of chunk2
+            # Look for overlapping text (at least 10 chars to account for word boundaries)
+            min_overlap_check = min(overlap_amount, 10)
+            chunk1_end = chunk1_text[-min_overlap_check * 2 :]
+            chunk2_start = chunk2_text[: min_overlap_check * 2]
+
+            # Find common substring between end of chunk1 and start of chunk2
+            # This handles cases where overlap might not be exactly at boundaries
+            for check_len in range(min_overlap_check, len(chunk1_end) + 1):
+                if chunk1_end[-check_len:] in chunk2_start:
+                    overlap_found = True
+                    # Verify overlap is approximately the right size
+                    actual_overlap = len(chunk1_end[-check_len:])
+                    # Allow some flexibility (overlap might be slightly different due to word boundaries)
+                    assert actual_overlap >= min_overlap_check, (
+                        f"Overlap too small: expected at least {min_overlap_check}, "
+                        f"found {actual_overlap} between chunks {i} and {i+1}"
+                    )
+                    break
+
+        # At least one pair of consecutive chunks should have overlap
+        # (unless text is very short or chunking strategy prevents it)
+        if len(chunks) >= 2:
+            assert overlap_found, (
+                "No overlap detected between consecutive chunks. "
+                "This may indicate overlap is not working correctly."
+            )
+
+    # Verify total characters with overlap is greater than without
+    # (due to overlapping text being counted in multiple chunks)
+    assert result_with_overlap.total_characters >= result_no_overlap.total_characters
+
+
+# Test 2b: Edge case - very small overlap
+@pytest.mark.asyncio
+async def test_chunking_with_small_overlap():
+    """Test chunking with very small overlap value."""
+    text = "Word1 Word2 Word3 Word4 Word5 " * 20  # Short repeating pattern
+    overlap_amount = 10  # Small overlap
+
     chunker = UnstructuredChunker(
         strategy="fast",
         chunking_strategy="basic",
-        overlap=50,  # 50 character overlap
+        overlap=overlap_amount,
+        new_after_n_chars=100,  # Force chunking
     )
-
-    text = "This is a test document with overlap. " * 100
     result = await chunker.chunk_text(text, filename="test.txt")
 
     assert result is not None
     assert result.total_chunks > 0
-    # Overlap should create more chunks than without
     assert result.documents is not None
+
+    # If we have multiple chunks, verify overlap exists
+    chunks = result.documents
+    if len(chunks) > 1:
+        # At least verify chunks are created (overlap detection may be tricky with small values)
+        assert all(chunk.text for chunk in chunks), "All chunks should have text"
 
 
 # Test 3: Chunking with max_characters parameter

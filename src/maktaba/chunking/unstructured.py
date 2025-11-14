@@ -109,10 +109,17 @@ class UnstructuredChunker(BaseChunker):
 
             # Add advanced chunking parameters if set
             overlap = kwargs.get("overlap", self.overlap)
+            max_chars = kwargs.get("max_characters", self.max_characters) or self.max_characters
+
             if overlap is not None:
                 unstructured_args["overlap"] = overlap
+                # overlap_all=True ensures overlap applies between ALL chunks, not just split chunks
+                # Only use it if overlap is reasonable (< 50% of max chunk size) to avoid duplicate chunks
+                # when chunks end up being smaller than expected
+                max_chars_for_check = max_chars or 1000
+                if overlap < max_chars_for_check * 0.5:
+                    unstructured_args["overlap_all"] = True
 
-            max_chars = kwargs.get("max_characters", self.max_characters)
             if max_chars is not None:
                 unstructured_args["max_characters"] = max_chars
 
@@ -213,10 +220,17 @@ class UnstructuredChunker(BaseChunker):
 
             # Add advanced chunking parameters if set
             overlap = kwargs.get("overlap", self.overlap)
+            max_chars = kwargs.get("max_characters", self.max_characters) or self.max_characters
+
             if overlap is not None:
                 unstructured_args["overlap"] = overlap
+                # overlap_all=True ensures overlap applies between ALL chunks, not just split chunks
+                # Only use it if overlap is reasonable (< 50% of max chunk size) to avoid duplicate chunks
+                # when chunks end up being smaller than expected
+                max_chars_for_check = max_chars or 1000
+                if overlap < max_chars_for_check * 0.5:
+                    unstructured_args["overlap_all"] = True
 
-            max_chars = kwargs.get("max_characters", self.max_characters)
             if max_chars is not None:
                 unstructured_args["max_characters"] = max_chars
 
@@ -322,10 +336,17 @@ class UnstructuredChunker(BaseChunker):
 
             # Add advanced chunking parameters if set
             overlap = kwargs.get("overlap", self.overlap)
+            max_chars = kwargs.get("max_characters", self.max_characters) or self.max_characters
+
             if overlap is not None:
                 unstructured_args["overlap"] = overlap
+                # overlap_all=True ensures overlap applies between ALL chunks, not just split chunks
+                # Only use it if overlap is reasonable (< 50% of max chunk size) to avoid duplicate chunks
+                # when chunks end up being smaller than expected
+                max_chars_for_check = max_chars or 1000
+                if overlap < max_chars_for_check * 0.5:
+                    unstructured_args["overlap_all"] = True
 
-            max_chars = kwargs.get("max_characters", self.max_characters)
             if max_chars is not None:
                 unstructured_args["max_characters"] = max_chars
 
