@@ -30,8 +30,3 @@ class ConfigurationError(MaktabaError):
 
     pass
 
-
-class PartitionAPIError(MaktabaError):
-    """Raised when partition API call fails."""
-
-    pass

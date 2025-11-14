@@ -252,10 +252,15 @@ class OpenAILLM(BaseLLM):
                 prompt=user_prompt,
                 temperature=self.temperature,
             )
-            queries = result.get("queries", [])
+            queries_raw = result.get("queries", [])
+            # Type check: ensure queries is a list
+            if not isinstance(queries_raw, list):
+                queries: List[Dict[str, Any]] = []
+            else:
+                queries = queries_raw
 
             self._logger.info(
-                f"Generated {len(queries)} queries: {[q['query'] for q in queries]} "
+                f"Generated {len(queries)} queries: {[q.get('query', '') if isinstance(q, dict) else str(q) for q in queries]} "
                 f"(tokens: {usage.total_tokens})"
             )
             return queries[:max_queries], usage
@@ -295,7 +300,9 @@ class OpenAILLM(BaseLLM):
                 prompt=user_prompt,
                 temperature=self.temperature,
             )
-            can_answer = result.get("canAnswer", True)
+            can_answer_raw = result.get("canAnswer", True)
+            # Type check: ensure can_answer is a bool
+            can_answer = bool(can_answer_raw) if isinstance(can_answer_raw, (bool, int, str)) else True
 
             self._logger.info(f"Source evaluation: canAnswer={can_answer} (tokens: {usage.total_tokens})")
             return can_answer, usage

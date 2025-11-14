@@ -10,12 +10,10 @@ from .exceptions import (
     ConfigurationError,
     EmbeddingError,
     MaktabaError,
-    PartitionAPIError,
     StorageError,
 )
 from .models import (
     EmbeddingConfig,
-    PartitionConfig,
     SearchResult,
     VectorChunk,
     VectorStoreConfig,
@@ -30,13 +28,11 @@ __all__ = [
     "StorageError",
     "ChunkingError",
     "ConfigurationError",
-    "PartitionAPIError",
     # Models
     "VectorChunk",
     "SearchResult",
     "EmbeddingConfig",
     "VectorStoreConfig",
-    "PartitionConfig",
     # Version
     "__version__",
 ]

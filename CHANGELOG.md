@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.17] - 2025-01-XX
+
+### Fixed
+- **UnstructuredChunker overlap functionality**: Fixed overlap not working correctly in `UnstructuredChunker`:
+  - Added `overlap_all=True` parameter when `overlap` is specified to ensure overlap applies between ALL chunks, not just split chunks
+  - Made `overlap_all` conditional: only enabled when overlap is reasonable (< 50% of max chunk size) to prevent duplicate chunks when chunks end up smaller than expected
+  - This ensures proper overlap between consecutive chunks while avoiding near-duplicate chunks when overlap is too large relative to chunk size
+  - Applied fix to all three methods: `chunk_text()`, `chunk_file()`, and `chunk_url()`
+
+### Improved
+- **Overlap detection in tests**: Enhanced overlap verification in chunking tests:
+  - Improved overlap detection algorithm to handle whitespace normalization and text boundary differences
+  - Added better diagnostic output showing full chunk text for small chunks
+  - More accurate overlap detection that accounts for text normalization by Unstructured.io
+  - Better error messages explaining why exact overlap might not be detected at boundaries
+
 ## [0.1.16] - 2025-11-14
 
 ### Added
@@ -204,7 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.16...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.17...HEAD
+[0.1.17]: https://github.com/nuhatech/maktaba/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/nuhatech/maktaba/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/nuhatech/maktaba/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/nuhatech/maktaba/compare/v0.1.13...v0.1.14

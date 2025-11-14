@@ -2,7 +2,6 @@
 Example: Document Chunking with UnstructuredChunker
 
 Demonstrates how to chunk documents using Maktaba's integrated chunking module.
-This replaces the need for partition-api HTTP calls.
 """
 
 import asyncio

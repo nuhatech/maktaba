@@ -1,17 +1,17 @@
 """Supabase keyword search implementation using PostgreSQL FTS."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 try:
     from supabase import Client as SyncClient
     from supabase import create_client as create_sync_client
 
-    Client: Optional[type[Any]] = SyncClient
-    create_client: Optional[Callable[..., Any]] = create_sync_client
+    Client = SyncClient
+    create_client = create_sync_client
 except ImportError:
-    Client = None
-    create_client = None
+    Client = None  # type: ignore[assignment]
+    create_client = None  # type: ignore[assignment]
 
 from ..exceptions import StorageError
 from ..models import SearchResult
@@ -103,7 +103,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
                 "Supabase API key must be provided either as key parameter or SUPABASE_KEY environment variable"
             )
 
-        self.client: Client = create_client(_url, _key)
+        self.client = create_client(_url, _key)  # type: ignore[assignment]
         self.table_name = table_name
         self.text_column = text_column
         self.search_vector_column = search_vector_column
@@ -143,6 +143,8 @@ class SupabaseKeywordStore(BaseKeywordStore):
             ]
 
             # Start query builder
+            if self.client is None:
+                raise StorageError("Supabase client not initialized")
             query_builder = self.client.table(self.table_name).select(
                 ", ".join(select_columns)
             )
@@ -258,6 +260,8 @@ class SupabaseKeywordStore(BaseKeywordStore):
 
             # Bulk upsert to Supabase
             # on_conflict specifies which column to use for conflict resolution
+            if self.client is None:
+                raise StorageError("Supabase client not initialized")
             self.client.table(self.table_name).upsert(
                 rows,
                 on_conflict=self.id_column

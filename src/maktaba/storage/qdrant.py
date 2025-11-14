@@ -154,14 +154,18 @@ class QdrantStore(BaseVectorStore):
 
                 # Store relationships in metadata (serialize NodeRelationship objects)
                 if chunk.relationships:
-                    serialized_rels = {}
+                    serialized_rels: Dict[str, Any] = {}
                     for rel_type, rel_obj in chunk.relationships.items():
                         if hasattr(rel_obj, 'to_dict'):
                             # NodeRelationship object - serialize it
                             serialized_rels[rel_type] = rel_obj.to_dict()
                         else:
-                            # Legacy string format - store as-is
-                            serialized_rels[rel_type] = rel_obj
+                            # Legacy string format - store as-is (ensure it's a valid dict value)
+                            if isinstance(rel_obj, (str, dict, list, int, float, bool, type(None))):
+                                serialized_rels[rel_type] = rel_obj
+                            else:
+                                # Convert to string if it's something else
+                                serialized_rels[rel_type] = str(rel_obj)
                     payload["_relationships"] = serialized_rels
                 elif hasattr(chunk, 'simple_relationships') and chunk.simple_relationships:
                     # Legacy simple relationships support

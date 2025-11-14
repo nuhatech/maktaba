@@ -49,7 +49,7 @@ class ChromaStore(BaseVectorStore):
             ids = [c.id for c in chunks]
             embeddings = [c.vector for c in chunks]
             metadatas = [{**c.metadata, **({"namespace": namespace} if namespace else {})} for c in chunks]
-            self._collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)  # type: ignore[arg-type]
+            self._collection.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
         except Exception as e:
             raise StorageError(f"Chroma upsert failed: {str(e)}") from e
 
@@ -68,7 +68,7 @@ class ChromaStore(BaseVectorStore):
             if namespace:
                 where["namespace"] = namespace
             resp = self._collection.query(
-                query_embeddings=[vector], n_results=topK, where=where or None  # type: ignore[arg-type]
+                query_embeddings=[vector], n_results=topK, where=where or None
             )
             out: List[SearchResult] = []
             ids = (resp.get("ids") or [[]])[0]
@@ -79,7 +79,7 @@ class ChromaStore(BaseVectorStore):
                 # Convert Chroma distance to a similarity-like score (simple inverse)
                 dist = float(dists[i]) if i < len(dists) else 0.0
                 score = 1.0 / (1.0 + dist) if dist >= 0 else 0.0
-                out.append(SearchResult(id=str(sid), score=score, metadata=meta or {}))  # type: ignore[arg-type]
+                out.append(SearchResult(id=str(sid), score=score, metadata=meta or {}))
             return out
         except Exception as e:
             raise StorageError(f"Chroma query failed: {str(e)}") from e
@@ -102,7 +102,7 @@ class ChromaStore(BaseVectorStore):
     ) -> List[str]:
         try:
             where = {"namespace": namespace} if namespace else None
-            got = self._collection.get(include=["ids"], limit=limit, where=where)  # type: ignore[arg-type,list-item]
+            got = self._collection.get(include=["ids"], limit=limit, where=where)
             ids = got.get("ids", [])
             if prefix is not None:
                 ids = [i for i in ids if str(i).startswith(prefix)]
