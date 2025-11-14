@@ -1,4 +1,4 @@
-"""Unstructured document chunker - extracted from partition-api."""
+"""Unstructured document chunker"""
 
 from io import BytesIO
 from pathlib import Path
@@ -15,8 +15,7 @@ class UnstructuredChunker(BaseChunker):
     """
     Document chunker using Unstructured.io library via LlamaIndex.
 
-    This implementation extracts the core logic from partition-api (main.py)
-    and integrates it directly into Maktaba for better performance and simplicity.
+    This implementation integrates Unstructured document chunking directly into Maktaba for better performance and simplicity.
 
     Supports:
     - Multiple file formats (PDF, DOCX, TXT, HTML, etc.)
@@ -402,7 +401,7 @@ class UnstructuredChunker(BaseChunker):
         """
         Extract total page count from documents.
 
-        Matches partition-api logic: finds max page_number in metadata.
+        # Finds the highest page number in document metadata.
         """
         total_pages = None
 

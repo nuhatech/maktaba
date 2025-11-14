@@ -187,23 +187,6 @@ class VectorStoreConfig:
 
 
 @dataclass
-class PartitionConfig:
-    """Configuration for partition API (document chunking)."""
-
-    api_url: str = "http://localhost:8000"  # Self-hosted by default
-    api_key: str = ""
-    redis_url: Optional[str] = None  # For fetching batched chunks
-    redis_password: Optional[str] = None
-
-    # Chunking parameters (match Unstructured.io)
-    default_strategy: Literal["auto", "fast", "hi_res", "ocr_only"] = "auto"
-    default_chunking_strategy: Literal["basic", "by_title"] = "basic"
-    default_chunk_size: int = 1000
-    default_overlap: int = 200
-    batch_size: int = 30  # Default
-
-
-@dataclass
 class LLMUsage:
     """
     LLM token usage tracking.

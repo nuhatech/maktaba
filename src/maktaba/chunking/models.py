@@ -8,8 +8,6 @@ from typing import Any, Dict, List, Optional
 class ChunkMetadata:
     """
     Metadata about the chunked document.
-
-    Matches partition-api output format.
     """
 
     filename: str
@@ -28,7 +26,6 @@ class ChunkResult:
     Result of document chunking operation.
 
     Contains chunks as LlamaIndex Document objects plus metadata.
-    Matches partition-api response structure.
     """
 
     documents: List[Any]  # List[llama_index.core.schema.Document]
@@ -54,7 +51,7 @@ class ChunkResult:
 
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format (matches partition-api response)."""
+        """Convert to dictionary format."""
         result = {
             "metadata": {
                 "filename": self.metadata.filename,
