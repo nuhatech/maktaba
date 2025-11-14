@@ -123,7 +123,7 @@ class QueryPipeline:
         if keyword_queries and self.keyword_store is not None:
             # Capture keyword_store in local variable for type narrowing
             keyword_store = self.keyword_store
-            
+
             async def create_keyword_search(kw_q: str) -> List[SearchResult]:
                 """Execute keyword search for a single query."""
                 try:
@@ -136,7 +136,7 @@ class QueryPipeline:
                 except Exception as e:
                     self._logger.error(f"Keyword search failed for '{kw_q[:50]}...': {e}", exc_info=True)
                     return []
-            
+
             for kw_query in keyword_queries:
                 keyword_tasks.append(asyncio.create_task(create_keyword_search(kw_query)))
 
