@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.17] - 2025-01-XX
+## [0.1.18] - 2025-11-15
+
+### Added
+- **Keyword search support in `search_with_history`**: Added `keyword_queries` and `keyword_limit` parameters to `QueryPipeline.search_with_history()` method:
+  - Enables parallel keyword search when using conversation history with query condensation
+  - Parameters are passed through to the underlying `search()` method
+  - Maintains consistency with `search()` method API
+
+## [0.1.17] - 2025-11-14
 
 ### Fixed
 - **UnstructuredChunker overlap functionality**: Fixed overlap not working correctly in `UnstructuredChunker`:
@@ -220,7 +228,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.17...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.18...HEAD
+[0.1.18]: https://github.com/nuhatech/maktaba/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/nuhatech/maktaba/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/nuhatech/maktaba/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/nuhatech/maktaba/compare/v0.1.14...v0.1.15
