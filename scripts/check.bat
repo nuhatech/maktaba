@@ -24,7 +24,7 @@ if %ERRORLEVEL% EQU 0 (
 REM Check 2: MyPy type checking
 echo.
 echo [2/3] Running MyPy type checking...
-python -m mypy src/maktaba --no-error-summary 2>&1 | findstr /C:"error:" > mypy_errors.tmp
+uv run python -m mypy src/maktaba --no-error-summary 2>&1 | findstr /C:"error:" > mypy_errors.tmp
 if exist mypy_errors.tmp (
     for /f %%A in ('type mypy_errors.tmp ^| find /c /v ""') do set ERROR_COUNT=%%A
 ) else (

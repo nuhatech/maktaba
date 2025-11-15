@@ -7,7 +7,7 @@ try:
     from supabase import Client as SyncClient
     from supabase import create_client as create_sync_client
 
-    Client = SyncClient
+    Client: type[SyncClient] | None = SyncClient  # type: ignore[assignment, misc]
     create_client = create_sync_client
 except ImportError:
     Client = None  # type: ignore[assignment]
@@ -184,7 +184,7 @@ class SupabaseKeywordStore(BaseKeywordStore):
                 "Supabase API key must be provided either as key parameter or SUPABASE_KEY environment variable"
             )
 
-        self.client = create_client(_url, _key)  # type: ignore[assignment]
+        self.client = create_client(_url, _key)
         self.table_name = table_name
         self.text_column = text_column
         self.search_vector_column = search_vector_column
@@ -271,9 +271,17 @@ class SupabaseKeywordStore(BaseKeywordStore):
         if not response.data:
             return []
 
+        # Type guard: ensure response.data is a list
+        if not isinstance(response.data, list):
+            return []
+
         # Convert RPC results to SearchResult
         search_results = []
         for row in response.data:
+            # Type guard: ensure row is a dict
+            if not isinstance(row, dict):
+                continue
+
             # Map RPC return columns to SearchResult using configurable column names
             chunk_id = str(row.get(self.rpc_id_column, ""))
             text_content = row.get(self.rpc_text_column, "")
@@ -294,7 +302,15 @@ class SupabaseKeywordStore(BaseKeywordStore):
                     metadata[col] = row[col]
 
             # Convert rank (real) to float for score
-            score = float(rank_score) if rank_score is not None else None
+            score: float | None = None
+            if rank_score is not None:
+                if isinstance(rank_score, (int, float)):
+                    score = float(rank_score)
+                else:
+                    try:
+                        score = float(str(rank_score))
+                    except (ValueError, TypeError):
+                        score = None
 
             # Add text to metadata (SearchResult.text property reads from metadata["text"])
             # Use text_column name for consistency, but also add "text" for compatibility
@@ -371,9 +387,16 @@ class SupabaseKeywordStore(BaseKeywordStore):
         if not response.data:
             return []
 
+        # Type guard: ensure response.data is a list
+        if not isinstance(response.data, list):
+            return []
+
         # Convert to SearchResult
         search_results = []
         for row in response.data:
+            # Type guard: ensure row is a dict
+            if not isinstance(row, dict):
+                continue
             # Extract ID
             chunk_id = str(row.get(self.id_column, ""))
 
