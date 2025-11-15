@@ -516,7 +516,7 @@ async def test_supabase_keyword_search_rpc_with_filters():
 
         # Test RPC search with filter (if you have book_id in your data)
         # Uncomment and adjust if you have book_id values in your database:
-        
+
         query = "سننظر أصدقت أم كنت من الكاذبين"
         results_with_filter = await store.search(
             query=query,
