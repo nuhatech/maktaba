@@ -93,7 +93,13 @@ class QueryPipeline:
             keyword_limit: Number of results per keyword query
 
         Returns:
-            Dict with formatted_context, citations, and results
+            Dict with:
+                - formatted_context: Formatted text with citations
+                - citations: List of citation entries
+                - results: Merged results (semantic + keyword, deduplicated)
+                - semantic_results: Separate semantic search results (before merge)
+                - keyword_results: Separate keyword search results (before merge)
+                - keyword_result_count: Total count of keyword results
         """
         k = top_k or self.default_top_k
         ns = namespace or self.namespace
@@ -162,6 +168,7 @@ class QueryPipeline:
                 all_chunks[chunk.id] = chunk
 
         # Process keyword results
+        keyword_results: List[SearchResult] = []  # Collect all keyword results separately
         keyword_result_count = 0
         for idx, kw_result in enumerate(results_list[1:], 1):
             if isinstance(kw_result, Exception):
@@ -171,6 +178,7 @@ class QueryPipeline:
                 continue
 
             keyword_result_count += len(kw_result)
+            keyword_results.extend(kw_result)  # Collect keyword results separately
             for chunk in kw_result:
                 # Keep first occurrence (semantic results take priority)
                 if chunk.id not in all_chunks:
@@ -203,11 +211,16 @@ class QueryPipeline:
         # 6) Format citations
         formatted = format_with_citations(ranked, top_k=k)
         formatted["results"] = ranked
+        formatted["semantic_results"] = semantic_results  # Separate semantic results
+        formatted["keyword_results"] = keyword_results  # Separate keyword results (before merge)
+        formatted["keyword_result_count"] = keyword_result_count  # Count for convenience
         citations = formatted.get("citations", [])
         self._logger.info(
-            "query.done: formatted_blocks=%d citations=%d",
+            "query.done: formatted_blocks=%d citations=%d semantic=%d keyword=%d",
             len(ranked),
             len(citations) if hasattr(citations, '__len__') else 0,
+            len(semantic_results),
+            keyword_result_count,
         )
         return formatted
 
@@ -248,7 +261,13 @@ class QueryPipeline:
             keyword_limit: Number of results per keyword query
 
         Returns:
-            Dict with formatted_context, citations, and results
+            Dict with:
+                - formatted_context: Formatted text with citations
+                - citations: List of citation entries
+                - results: Merged results (semantic + keyword, deduplicated)
+                - semantic_results: Separate semantic search results (before merge)
+                - keyword_results: Separate keyword search results (before merge)
+                - keyword_result_count: Total count of keyword results
         """
         if not messages:
             raise ValueError("messages must contain at least one item")
