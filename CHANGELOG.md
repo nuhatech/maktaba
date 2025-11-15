@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19] - 2025-11-15
+
+### Added
+- **Separate keyword results in QueryPipeline return value**: Enhanced `QueryPipeline.search()` and `search_with_history()` to return keyword results separately before merge:
+  - New `semantic_results` field in return dict containing separate semantic search results (before merge)
+  - New `keyword_results` field in return dict containing separate keyword search results (before merge)
+  - New `keyword_result_count` field for convenience (total count of keyword results)
+  - Allows users to distinguish which results came from keyword search vs semantic search
+  - Enables separate analysis of keyword vs semantic search performance
+  - Provides access to keyword results before deduplication for debugging
+
 ## [0.1.18] - 2025-11-15
 
 ### Added
@@ -228,7 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.18...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.19...HEAD
+[0.1.19]: https://github.com/nuhatech/maktaba/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/nuhatech/maktaba/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/nuhatech/maktaba/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/nuhatech/maktaba/compare/v0.1.15...v0.1.16
