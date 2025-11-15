@@ -224,7 +224,32 @@ class QueryPipeline:
         includeMetadata: bool = True,
         condenser: Optional[QueryCondenser] = None,
         max_history: int = 10,
+        keyword_queries: Optional[List[str]] = None,
+        keyword_limit: int = 15,
     ) -> Dict[str, object]:
+        """
+        Perform search with conversation history using query condensation.
+
+        Condenses the conversation history and latest user message into a single
+        search query, then performs semantic search with optional parallel keyword search.
+
+        Args:
+            messages: Conversation history as list of dicts or (role, content) tuples
+            rerank: Whether to apply reranking
+            top_k: Number of semantic search results
+            rerank_limit: Number of results after reranking
+            min_score: Minimum similarity score threshold
+            namespace: Search namespace
+            filter: Metadata filters
+            includeMetadata: Include metadata in results
+            condenser: Optional query condenser (defaults to AutoQueryCondenser)
+            max_history: Maximum number of history messages to use for condensation
+            keyword_queries: Optional list of keyword queries for parallel full-text search
+            keyword_limit: Number of results per keyword query
+
+        Returns:
+            Dict with formatted_context, citations, and results
+        """
         if not messages:
             raise ValueError("messages must contain at least one item")
 
@@ -265,4 +290,6 @@ class QueryPipeline:
             namespace=namespace,
             filter=filter,
             includeMetadata=includeMetadata,
+            keyword_queries=keyword_queries,
+            keyword_limit=keyword_limit,
         )
