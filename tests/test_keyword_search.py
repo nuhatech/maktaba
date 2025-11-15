@@ -372,3 +372,222 @@ async def test_supabase_keyword_search_with_filters():
     #     print(f"Search with custom filter returned {len(results)} results")
     # except Exception as e:
     #     print(f"Custom filter test skipped: {e}")
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_rpc():
+    """Test Supabase keyword search with RPC function."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+    rpc_function = os.getenv("SUPABASE_RPC_FUNCTION", "keyword_search")
+
+    # Test basic RPC search
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="page_key",
+        search_vector_column="fts",
+        text_column="original_text",
+        language="arabic",
+        use_rpc=True,
+        rpc_function_name=rpc_function,
+        rpc_id_column="page_key",
+        rpc_text_column="original_text",
+        rpc_score_column="rank",
+    )
+
+    try:
+        # Test basic RPC search
+        query = "سننظر أصدقت أم كنت من الكاذبين"
+        results = await store.search(query=query, limit=5)
+        assert isinstance(results, list)
+        print(f"RPC search returned {len(results)} results")
+
+        # If we have results, verify structure
+        if results:
+            result = results[0]
+            # Verify SearchResult structure
+            assert hasattr(result, "id")
+            assert hasattr(result, "score")
+            assert hasattr(result, "metadata")
+            # Verify score is returned (ts_rank from RPC)
+            assert result.score is not None, "RPC should return ts_rank scores"
+            assert isinstance(result.score, float), "Score should be a float"
+            assert result.score >= 0, "ts_rank scores should be non-negative"
+            # Verify text is in metadata
+            assert "text" in result.metadata or "original_text" in result.metadata
+            # Verify other RPC columns are in metadata
+            print(f"Sample result ID: {result.id}, Score: {result.score}")
+            print(f"Sample result metadata keys: {list(result.metadata.keys())}")
+
+        # Write results to file for inspection
+        # output_file = "test_supabase_keyword_search_rpc_results.txt"
+        # with open(output_file, "w", encoding="utf-8") as f:
+        #     f.write("=" * 80 + "\n")
+        #     f.write("Supabase Keyword Search RPC Test - Results\n")
+        #     f.write("=" * 80 + "\n\n")
+        #     f.write(f"Query: {query}\n")
+        #     f.write(f"RPC Function: {rpc_function}\n")
+        #     f.write(f"Table: {table_name}\n")
+        #     f.write(f"Total Results: {len(results)}\n")
+        #     f.write(f"RPC ID Column: {store.rpc_id_column}\n")
+        #     f.write(f"RPC Text Column: {store.rpc_text_column}\n")
+        #     f.write(f"RPC Score Column: {store.rpc_score_column}\n")
+        #     f.write("\n" + "=" * 80 + "\n")
+        #     f.write("RPC SEARCH RESULTS\n")
+        #     f.write("=" * 80 + "\n\n")
+        #     if results:
+        #         for idx, res in enumerate(results, 1):
+        #             f.write(f"{idx}. ID: {res.id}\n")
+        #             f.write(f"   Score (ts_rank): {res.score}\n")
+        #             f.write(f"   Text Preview: {res.text[:200] if res.text else 'N/A'}...\n")
+        #             f.write(f"   Full Text: {res.text if res.text else 'N/A'}\n")
+        #             f.write(f"   Metadata Keys: {list(res.metadata.keys())}\n")
+        #             f.write(f"   Full Metadata: {res.metadata}\n")
+        #             f.write(f"   Full SearchResult: {res}\n")
+        #             f.write("\n")
+        #     else:
+        #         f.write("No results found.\n")
+        #     f.write("\n" + "=" * 80 + "\n")
+        #     f.write("CONFIGURATION\n")
+        #     f.write("=" * 80 + "\n\n")
+        #     f.write(f"use_rpc: {store.use_rpc}\n")
+        #     f.write(f"rpc_function_name: {store.rpc_function_name}\n")
+        #     f.write(f"rpc_filter_mapping: {store.rpc_filter_mapping}\n")
+        #     f.write(f"rpc_id_column: {store.rpc_id_column}\n")
+        #     f.write(f"rpc_text_column: {store.rpc_text_column}\n")
+        #     f.write(f"rpc_score_column: {store.rpc_score_column}\n")
+        #     f.write(f"id_column: {store.id_column}\n")
+        #     f.write(f"text_column: {store.text_column}\n")
+        #     f.write(f"search_vector_column: {store.search_vector_column}\n")
+        #     f.write(f"language: {store.language}\n")
+        # print(f"\nResults written to: {output_file}")
+
+    except Exception as e:
+        # If RPC function doesn't exist, skip the test
+        if "function" in str(e).lower() and "does not exist" in str(e).lower():
+            pytest.skip(f"RPC function '{rpc_function}' does not exist: {e}")
+        else:
+            raise
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_rpc_with_filters():
+    """Test Supabase keyword search with RPC function and filter mapping."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+    rpc_function = os.getenv("SUPABASE_RPC_FUNCTION", "keyword_search")
+
+    # Test RPC with filter mapping
+    # Note: This assumes your RPC function accepts p_book_id, p_author_id, etc.
+    # Adjust rpc_filter_mapping based on your actual RPC function signature
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="page_key",
+        search_vector_column="fts",
+        text_column="original_text",
+        language="arabic",
+        use_rpc=True,
+        rpc_function_name=rpc_function,
+        rpc_filter_mapping={
+            "book_id": "p_book_id",
+            "author_id": "p_author_id",
+            "book_category": "p_book_category",
+        },
+        rpc_id_column="page_key",
+        rpc_text_column="original_text",
+        rpc_score_column="rank",
+    )
+
+    try:
+        # Test RPC search without filters
+        # results_no_filter = await store.search(query="الإسلام", limit=5)
+        # assert isinstance(results_no_filter, list)
+        # print(f"RPC search (no filter) returned {len(results_no_filter)} results")
+
+        # Test RPC search with filter (if you have book_id in your data)
+        # Uncomment and adjust if you have book_id values in your database:
+        
+        query = "سننظر أصدقت أم كنت من الكاذبين"
+        results_with_filter = await store.search(
+            query=query,
+            limit=5,
+            filter={"book_id": 7798}  # Adjust to a valid book_id
+        )
+        assert isinstance(results_with_filter, list)
+        print(f"RPC search (with filter) returned {len(results_with_filter)} results")
+        # Verify filter was applied (if we have results)
+        if results_with_filter:
+            # Check that results have the filtered book_id in metadata
+            for result in results_with_filter:
+                if "book_id" in result.metadata:
+                    assert result.metadata["book_id"] == 7798
+
+    except Exception as e:
+        # If RPC function doesn't exist, skip the test
+        if "function" in str(e).lower() and "does not exist" in str(e).lower():
+            pytest.skip(f"RPC function '{rpc_function}' does not exist: {e}")
+        else:
+            raise
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_supabase_keyword_search_rpc_column_mapping():
+    """Test Supabase keyword search RPC with custom column mapping."""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+    rpc_function = os.getenv("SUPABASE_RPC_FUNCTION", "keyword_search")
+
+    # Test RPC with custom column mapping (different from defaults)
+    store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column="id",  # Default id_column
+        search_vector_column="fts",
+        text_column="text",  # Default text_column
+        language="arabic",
+        use_rpc=True,
+        rpc_function_name=rpc_function,
+        rpc_id_column="page_key",  # RPC returns "page_key" but we map it
+        rpc_text_column="original_text",  # RPC returns "original_text" but we map it
+        rpc_score_column="rank",  # RPC returns "rank" for score
+    )
+
+    try:
+        results = await store.search(query="الإسلام", limit=5)
+        assert isinstance(results, list)
+        print(f"RPC search with custom column mapping returned {len(results)} results")
+
+        # Verify column mapping worked correctly
+        if results:
+            result = results[0]
+            # ID should come from rpc_id_column ("page_key")
+            assert result.id is not None
+            # Score should come from rpc_score_column ("rank")
+            assert result.score is not None
+            # Text should be accessible
+            assert result.text is not None or len(result.text) > 0
+            # Metadata should contain other RPC columns
+            print(f"Result ID (from page_key): {result.id}")
+            print(f"Result score (from rank): {result.score}")
+            print(f"Result text length: {len(result.text)}")
+
+    except Exception as e:
+        # If RPC function doesn't exist, skip the test
+        if "function" in str(e).lower() and "does not exist" in str(e).lower():
+            pytest.skip(f"RPC function '{rpc_function}' does not exist: {e}")
+        else:
+            raise

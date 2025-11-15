@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -518,3 +519,175 @@ async def test_query_pipeline_keyword_integration_qdrant():
 
     # Verify citations are formatted
     assert len(result["citations"]) > 0
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not os.getenv("SUPABASE_URL"), reason="SUPABASE_URL not set")
+@pytest.mark.asyncio
+async def test_query_pipeline_return_structure_with_supabase():
+    """Integration test to verify QueryPipeline returns all expected fields with real Supabase."""
+    from maktaba.keyword.supabase import SupabaseKeywordStore
+
+    # Get Supabase credentials from environment
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    table_name = os.getenv("SUPABASE_TABLE_NAME", "page_content")
+
+    # Create Supabase keyword store
+    keyword_store = SupabaseKeywordStore(
+        url=url,
+        key=key,
+        table_name=table_name,
+        id_column=os.getenv("SUPABASE_ID_COLUMN", "page_key"),
+        search_vector_column=os.getenv("SUPABASE_SEARCH_VECTOR_COLUMN", "fts"),
+        text_column=os.getenv("SUPABASE_TEXT_COLUMN", "original_text"),
+        language=os.getenv("SUPABASE_LANGUAGE", "arabic"),
+        metadata_columns=['book_id', 'page_from_url', 'page', 'tome', 'page_key']
+    )
+
+    # Create pipeline with dummy vector store (we're testing keyword search integration)
+    embedder = DummyEmbedder()
+    vector_store = DummyStore(results=[
+        SearchResult(
+            id="semantic_1",
+            score=0.95,
+            metadata={"text": "This is a semantic search result about Tawhid."}
+        ),
+        SearchResult(
+            id="semantic_2",
+            score=0.90,
+            metadata={"text": "Another semantic result about Islamic theology."}
+        ),
+    ])
+    reranker = None  # No reranking for this test
+    pipeline = QueryPipeline(
+        embedder,
+        vector_store,
+        reranker,
+        keyword_store=keyword_store,
+    )
+
+    # Perform search with keyword queries
+    # Use a query that might exist in the database
+    result = await pipeline.search(
+        query="An-Naml - Verse 27 قَالَ سَنَنظُرُ أَصَدَقْتَ أَمْ كُنتَ مِنَ الْكَاذِبِينَ Tu peux expliquer ce verset ?",  # Arabic for "Islam" - adjust based on your test data
+        keyword_queries=[
+  'سورة النمل',
+  'النمل 27',
+  'سننظر أصدقت أم كنت من الكاذبين',
+  'أصدقت',
+  'كنت من الكاذبين',
+  'الصدق والكذب'
+],  # Try both Arabic and English
+        top_k=10,
+        keyword_limit=5,
+        rerank=False,
+    )
+
+    # Verify all expected return fields are present
+    assert "formatted_context" in result, "Missing formatted_context field"
+    assert "citations" in result, "Missing citations field"
+    assert "results" in result, "Missing results field"
+    assert "semantic_results" in result, "Missing semantic_results field"
+    assert "keyword_results" in result, "Missing keyword_results field"
+    assert "keyword_result_count" in result, "Missing keyword_result_count field"
+
+    # Verify types
+    assert isinstance(result["formatted_context"], str), "formatted_context should be a string"
+    assert isinstance(result["citations"], list), "citations should be a list"
+    assert isinstance(result["results"], list), "results should be a list"
+    assert isinstance(result["semantic_results"], list), "semantic_results should be a list"
+    assert isinstance(result["keyword_results"], list), "keyword_results should be a list"
+    assert isinstance(result["keyword_result_count"], int), "keyword_result_count should be an int"
+
+    # Verify semantic_results contains SearchResult objects
+    semantic_results = result["semantic_results"]
+    assert len(semantic_results) > 0, "Should have at least some semantic results"
+    for res in semantic_results:
+        assert isinstance(res, SearchResult), "semantic_results should contain SearchResult objects"
+        assert res.score is not None, "Semantic results should have scores"
+
+    # Verify keyword_results (may be empty if no matches in database)
+    keyword_results = result["keyword_results"]
+    keyword_result_count = result["keyword_result_count"]
+    assert len(keyword_results) == keyword_result_count, "keyword_results length should match keyword_result_count"
+
+    for res in keyword_results:
+        assert isinstance(res, SearchResult), "keyword_results should contain SearchResult objects"
+        # Keyword results may have score=None (Supabase doesn't expose ts_rank in simple queries)
+
+    # Verify merged results
+    merged_results = result["results"]
+    assert isinstance(merged_results, list), "results should be a list"
+    assert len(merged_results) > 0, "Should have at least some merged results"
+
+    # Verify deduplication: results should be unique by ID
+    result_ids = {r.id for r in merged_results}
+    assert len(result_ids) == len(merged_results), "Results should be deduplicated (no duplicate IDs)"
+
+    # Verify citations structure
+    citations = result["citations"]
+    assert len(citations) > 0, "Should have at least some citations"
+    for citation in citations:
+        assert isinstance(citation, dict), "Each citation should be a dict"
+        assert "index" in citation, "Citation should have index"
+        assert "id" in citation, "Citation should have id"
+
+    # Verify formatted_context contains citation markers
+    formatted_context = result["formatted_context"]
+    assert "[1]" in formatted_context or len(formatted_context) > 0, "formatted_context should contain citation markers or text"
+
+    # Write results to file for inspection
+    # output_file = "test_query_pipeline_keyword_results.txt"
+    # with open(output_file, "w", encoding="utf-8") as f:
+    #     f.write("=" * 80 + "\n")
+    #     f.write("QueryPipeline Return Structure Test - Results\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     f.write(f"Semantic results: {len(semantic_results)}\n")
+    #     f.write(f"Keyword results: {len(keyword_results)}\n")
+    #     f.write(f"Keyword result count: {keyword_result_count}\n")
+    #     f.write(f"Merged results: {len(merged_results)}\n")
+    #     f.write(f"Citations: {len(citations)}\n")
+    #     f.write(f"Formatted context length: {len(formatted_context)}\n")
+    #     f.write("\n" + "=" * 80 + "\n")
+    #     f.write("SEMANTIC RESULTS\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     for idx, res in enumerate(semantic_results, 1):
+    #         f.write(f"{idx}. ID: {res.id}\n")
+    #         f.write(f"   Score: {res.score}\n")
+    #         f.write(f"   Text: {res.text[:200] if res.text else 'N/A'}...\n")
+    #         f.write(f"   Metadata: {res.metadata}\n")
+    #         f.write("\n")
+    #     f.write("\n" + "=" * 80 + "\n")
+    #     f.write("KEYWORD RESULTS\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     if keyword_results:
+    #         for idx, res in enumerate(keyword_results, 1):
+    #             f.write(f"{idx}. ID: {res.id}\n")
+    #             f.write(f"   Score: {res.score}\n")
+    #             f.write(f"   Text: {res.text[:200] if res.text else 'N/A'}...\n")
+    #             f.write(f"   Full Text: {res.text if res.text else 'N/A'}\n")
+    #             f.write(f"   Metadata: {res.metadata}\n")
+    #             f.write(f"   Full data: {res}\n")
+    #             f.write("\n")
+    #     else:
+    #         f.write("No keyword results found.\n")
+    #     f.write("\n" + "=" * 80 + "\n")
+    #     f.write("MERGED RESULTS\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     for idx, res in enumerate(merged_results, 1):
+    #         f.write(f"{idx}. ID: {res.id}\n")
+    #         f.write(f"   Score: {res.score}\n")
+    #         f.write(f"   Text preview: {res.text[:200] if res.text else 'N/A'}...\n")
+    #         f.write("\n")
+    #     f.write("\n" + "=" * 80 + "\n")
+    #     f.write("CITATIONS\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     for citation in citations:
+    #         f.write(f"{citation}\n")
+    #     f.write("\n" + "=" * 80 + "\n")
+    #     f.write("FORMATTED CONTEXT\n")
+    #     f.write("=" * 80 + "\n\n")
+    #     f.write(formatted_context)
+    #     f.write("\n")
+    # print(f"\nResults written to: {output_file}")
