@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.20] - 2025-11-15
+
+### Added
+- **RPC support for SupabaseKeywordStore**: Added optional RPC (Remote Procedure Call) function support to `SupabaseKeywordStore` for advanced keyword search:
+  - New `use_rpc: bool = False` parameter to enable RPC mode instead of standard `text_search()`
+  - New `rpc_function_name: str = "keyword_search"` parameter for configurable PostgreSQL function name
+  - New `rpc_filter_mapping: Optional[Dict[str, str]] = None` parameter to map filter keys to RPC parameter names (e.g., `{"book_id": "p_book_id"}`)
+  - New `rpc_id_column`, `rpc_text_column`, and `rpc_score_column` parameters for configurable column mapping from RPC return values
+  - RPC functions can return `ts_rank` scores directly, providing proper FTS ranking that wasn't available in standard `text_search()` mode
+  - All RPC return columns (except id/text/score) are automatically included in result metadata
+  - Fully configurable to work with any RPC function signature and return structure
+  - Backward compatible: existing code continues to use `text_search()` by default
+
+### Tests
+- Comprehensive RPC test suite for SupabaseKeywordStore:
+  - Basic RPC search test with score verification
+  - RPC with filter mapping test
+  - Custom column mapping test
+  - All tests gracefully skip if RPC function doesn't exist in test environment
+
 ## [0.1.19] - 2025-11-15
 
 ### Added
@@ -239,7 +259,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.19...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.20...HEAD
+[0.1.20]: https://github.com/nuhatech/maktaba/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/nuhatech/maktaba/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/nuhatech/maktaba/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/nuhatech/maktaba/compare/v0.1.16...v0.1.17

@@ -146,7 +146,7 @@ class CohereQueryCondenser(QueryCondenser):
         try:
             import cohere
 
-            self._cohere = cohere
+            self._cohere: Any = cohere
         except Exception:  # pragma: no cover - optional dependency
             self._cohere = None
 
