@@ -267,6 +267,16 @@ class DeepResearchPipeline:
             if 1 <= index <= len(results.results):
                 filtered_views.append(results.results[index - 1])
 
+        # Safety net: if filter returned 0 but results exist, keep all results
+        if not filtered_views and results.results:
+            LOGGER.warning(
+                "deep_research.filter kept=0 but %d results available — "
+                "returning all results as fallback",
+                len(results.results),
+            )
+            filtered_views = list(results.results)
+            sources = list(range(1, len(filtered_views) + 1))
+
         LOGGER.info("deep_research.filter kept=%d", len(filtered_views))
         return FilteredResultsData(
             filtered_results=SearchResultsCollection.from_sequence(filtered_views),
