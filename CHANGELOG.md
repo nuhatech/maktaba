@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.23] - 2026-02-11
+
+### Added
+- **`omit_temperature` parameter for `OpenAILLM`**: Reasoning models (o1, o3, gpt-5-nano, etc.) only support the default temperature value. Set `omit_temperature=True` to omit the `temperature` parameter from API calls entirely.
+- **`omit_temperature` parameter for `AgenticQueryPipeline`**: Propagated to the internally created `OpenAILLM` when no custom LLM is provided.
+
 ## [0.1.22] - 2026-02-11
 
 ### Added
@@ -270,7 +276,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.22...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.23...HEAD
+[0.1.23]: https://github.com/nuhatech/maktaba/compare/v0.1.22...v0.1.23
 [0.1.22]: https://github.com/nuhatech/maktaba/compare/v0.1.21...v0.1.22
 [0.1.21]: https://github.com/nuhatech/maktaba/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/nuhatech/maktaba/compare/v0.1.19...v0.1.20

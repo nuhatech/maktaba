@@ -44,6 +44,7 @@ class AgenticQueryPipeline:
         prompts: Optional[AgenticPrompts] = None,
         namespace: Optional[str] = None,
         use_max_completion_tokens: bool = False,
+        omit_temperature: bool = False,
     ) -> None:
         """
         Initialize agentic pipeline.
@@ -61,6 +62,9 @@ class AgenticQueryPipeline:
             use_max_completion_tokens: Use ``max_completion_tokens`` instead of
                 ``max_tokens`` in OpenAI API calls. Required for newer models
                 (o1, o3, gpt-5-nano, etc.). Only applies when *llm* is not provided.
+            omit_temperature: Omit the ``temperature`` parameter from OpenAI API
+                calls. Required for reasoning models that only support the default
+                value. Only applies when *llm* is not provided.
 
         Example:
             # Use default prompts
@@ -94,6 +98,7 @@ class AgenticQueryPipeline:
                 model=llm_model,
                 prompts=prompts,
                 use_max_completion_tokens=use_max_completion_tokens,
+                omit_temperature=omit_temperature,
             )
 
     async def _execute_single_query(
