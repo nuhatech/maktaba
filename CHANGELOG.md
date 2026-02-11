@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.22] - 2026-02-11
+
+### Added
+- **`use_max_completion_tokens` parameter for `OpenAILLM`**: Newer OpenAI models (o1, o3, gpt-5-nano, etc.) require `max_completion_tokens` instead of the deprecated `max_tokens`. Set `use_max_completion_tokens=True` to use the new parameter name. When `max_tokens` is `None`, the parameter is now omitted entirely instead of sending `null` (which some models reject).
+- **`use_max_completion_tokens` parameter for `AgenticQueryPipeline`**: Propagated to the internally created `OpenAILLM` when no custom LLM is provided.
+
 ## [0.1.21] - 2026-02-11
 
 ### Fixed
@@ -264,7 +270,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.21...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.22...HEAD
+[0.1.22]: https://github.com/nuhatech/maktaba/compare/v0.1.21...v0.1.22
 [0.1.21]: https://github.com/nuhatech/maktaba/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/nuhatech/maktaba/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/nuhatech/maktaba/compare/v0.1.18...v0.1.19

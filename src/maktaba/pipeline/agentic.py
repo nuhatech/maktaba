@@ -43,6 +43,7 @@ class AgenticQueryPipeline:
         llm_model: str = "gpt-4o-mini",
         prompts: Optional[AgenticPrompts] = None,
         namespace: Optional[str] = None,
+        use_max_completion_tokens: bool = False,
     ) -> None:
         """
         Initialize agentic pipeline.
@@ -57,6 +58,9 @@ class AgenticQueryPipeline:
             llm_model: LLM model name
             prompts: Custom prompts for LLM operations (defaults to default_prompts())
             namespace: Default namespace for searches
+            use_max_completion_tokens: Use ``max_completion_tokens`` instead of
+                ``max_tokens`` in OpenAI API calls. Required for newer models
+                (o1, o3, gpt-5-nano, etc.). Only applies when *llm* is not provided.
 
         Example:
             # Use default prompts
@@ -85,7 +89,12 @@ class AgenticQueryPipeline:
         if llm is not None:
             self.llm = llm
         else:
-            self.llm = OpenAILLM(api_key=llm_api_key, model=llm_model, prompts=prompts)
+            self.llm = OpenAILLM(
+                api_key=llm_api_key,
+                model=llm_model,
+                prompts=prompts,
+                use_max_completion_tokens=use_max_completion_tokens,
+            )
 
     async def _execute_single_query(
         self,

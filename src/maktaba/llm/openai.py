@@ -36,6 +36,7 @@ class OpenAILLM(BaseLLM):
         temperature: float = 0.0,
         timeout_s: float = 30.0,
         prompts: Optional[AgenticPrompts] = None,
+        use_max_completion_tokens: bool = False,
     ) -> None:
         """
         Initialize OpenAI LLM.
@@ -46,12 +47,16 @@ class OpenAILLM(BaseLLM):
             temperature: Sampling temperature (default: 0 for deterministic)
             timeout_s: Request timeout in seconds
             prompts: Custom prompts for agentic operations (defaults to default_prompts())
+            use_max_completion_tokens: Use ``max_completion_tokens`` instead of
+                ``max_tokens`` in API calls. Required for newer OpenAI models
+                (o1, o3, gpt-5-nano, etc.) that no longer accept ``max_tokens``.
         """
         self.api_key = api_key
         self.model = model
         self.temperature = temperature
         self.timeout_s = timeout_s
         self.prompts = prompts or default_prompts()
+        self.use_max_completion_tokens = use_max_completion_tokens
         self._logger = get_logger("maktaba.llm.openai")
 
         # Lazy client initialization
@@ -69,6 +74,18 @@ class OpenAILLM(BaseLLM):
         if self._client is None and self._OpenAI is not None:
             self._client = self._OpenAI(api_key=self.api_key, timeout=self.timeout_s)
         return self._client
+
+    def _token_limit_kwargs(self, max_tokens: int | None) -> Dict[str, Any]:
+        """Build the token-limit keyword argument for the OpenAI API.
+
+        Returns an empty dict when *max_tokens* is ``None`` so the parameter
+        is omitted entirely (some models reject ``null``).  When a value is
+        provided the key name depends on :attr:`use_max_completion_tokens`.
+        """
+        if max_tokens is None:
+            return {}
+        key = "max_completion_tokens" if self.use_max_completion_tokens else "max_tokens"
+        return {key: max_tokens}
 
     def _format_chat_history(self, messages: List[Tuple[str, str]]) -> str:
         """Format chat history as text."""
@@ -102,7 +119,7 @@ class OpenAILLM(BaseLLM):
                     {"role": "user", "content": prompt},
                 ],
                 temperature=temperature,
-                max_tokens=max_tokens,
+                **self._token_limit_kwargs(max_tokens),
             )
 
             usage = LLMUsage(
@@ -141,7 +158,7 @@ class OpenAILLM(BaseLLM):
                     {"role": "user", "content": prompt},
                 ],
                 temperature=temperature,
-                max_tokens=max_tokens,
+                **self._token_limit_kwargs(max_tokens),
                 response_format={"type": "json_object"},
             )
 
@@ -182,7 +199,7 @@ class OpenAILLM(BaseLLM):
                     {"role": "user", "content": prompt},
                 ],
                 temperature=temperature,
-                max_tokens=max_tokens,
+                **self._token_limit_kwargs(max_tokens),
                 stream=True,
             )
 
