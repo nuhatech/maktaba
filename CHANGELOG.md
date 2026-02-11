@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.21] - 2026-02-11
+
+### Fixed
+- **Deep research filter safety net**: Added fallback in `_filter_results` so that when the LLM filter returns 0 sources but search results exist, all results are kept instead of being silently discarded. This prevents deep research from returning empty answers when the filter stage produces unparseable output.
+
 ## [0.1.20] - 2025-11-15
 
 ### Added
@@ -259,7 +264,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.20...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.21...HEAD
+[0.1.21]: https://github.com/nuhatech/maktaba/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/nuhatech/maktaba/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/nuhatech/maktaba/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/nuhatech/maktaba/compare/v0.1.17...v0.1.18
