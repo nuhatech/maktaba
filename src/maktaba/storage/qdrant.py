@@ -1,7 +1,7 @@
 """Qdrant vector store implementation - Pinecone-compatible interface."""
 
 import uuid
-from typing import Any, Dict, List, Optional, Sequence, cast
+from typing import Any, Dict, List, Optional, Sequence, Union, cast
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
@@ -195,7 +195,7 @@ class QdrantStore(BaseVectorStore):
         self,
         vector: List[float],
         topK: int = 10,  # camelCase!
-        filter: Optional[Dict[str, Any]] = None,
+        filter: Optional[Union[Dict[str, Any], Filter]] = None,
         includeMetadata: bool = True,
         includeRelationships: bool = False,
         namespace: Optional[str] = None,
@@ -206,7 +206,11 @@ class QdrantStore(BaseVectorStore):
         Args:
             vector: Query embedding vector
             topK: Number of results (camelCase to match Pinecone)
-            filter: Optional metadata filters
+            filter: Optional filter — accepts either a flat ``Dict[str, Any]``
+                (each key/value becomes an AND-joined ``FieldCondition``) or a
+                pre-built ``qdrant_client.models.Filter`` for full nested
+                ``must``/``should``/``must_not`` semantics. Pre-built ``Filter``
+                objects are passed through to Qdrant unchanged.
             includeMetadata: Whether to include metadata
             includeRelationships: Whether to include relationships (NEXT/PREVIOUS links)
             namespace: Optional namespace filter
@@ -215,9 +219,26 @@ class QdrantStore(BaseVectorStore):
             List of SearchResult objects sorted by score (descending)
         """
         try:
-            # Build Qdrant filter
-            qdrant_filter = None
-            if filter or namespace:
+            qdrant_filter: Optional[Filter] = None
+
+            if isinstance(filter, Filter):
+                # Pre-built Filter passes through unchanged. If a namespace is
+                # also supplied, AND it onto the existing must list.
+                if namespace:
+                    ns_cond = FieldCondition(
+                        key="namespace",
+                        match=MatchValue(value=namespace),
+                    )
+                    existing_must = list(filter.must or [])
+                    existing_must.append(ns_cond)
+                    qdrant_filter = Filter(
+                        must=cast(Sequence[Any], existing_must),
+                        should=filter.should,
+                        must_not=filter.must_not,
+                    )
+                else:
+                    qdrant_filter = filter
+            elif filter or namespace:
                 conditions = []
 
                 # Add namespace filter

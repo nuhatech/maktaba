@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.24] - 2026-04-29
+
+### Added
+- **`QdrantStore.query()` accepts a pre-built `Filter`**: The `filter` argument now accepts either the existing flat `Dict[str, Any]` (each key/value AND-joined as a `FieldCondition`) or a fully built `qdrant_client.models.Filter`. Pre-built filters pass through unchanged, enabling nested `must`/`should`/`must_not` semantics (e.g. visibility checks like `public OR (private AND owner == me)`). Existing dict callers continue to work without changes.
+
 ## [0.1.23] - 2026-02-11
 
 ### Added
