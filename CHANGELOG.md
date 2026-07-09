@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.25] - 2026-07-09
+
+### Fixed
+- **NLTK security floor for document chunking extras**: Added an explicit `nltk>=3.10.0` constraint to the `unstructured`, `unstructured-minimal`, and `all` extras so dependency resolution avoids vulnerable NLTK releases affected by CVE-2026-54293 / GHSA-p4gq-832x-fm9v.
+
 ## [0.1.24] - 2026-04-29
 
 ### Added
@@ -281,7 +286,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.23...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.25...HEAD
+[0.1.25]: https://github.com/nuhatech/maktaba/compare/v0.1.24...v0.1.25
+[0.1.24]: https://github.com/nuhatech/maktaba/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/nuhatech/maktaba/compare/v0.1.22...v0.1.23
 [0.1.22]: https://github.com/nuhatech/maktaba/compare/v0.1.21...v0.1.22
 [0.1.21]: https://github.com/nuhatech/maktaba/compare/v0.1.20...v0.1.21
@@ -305,7 +312,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0
-
-
 
 
