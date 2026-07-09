@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.1.24"
+version = "0.1.25"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}
@@ -42,6 +42,7 @@ supabase = [
 unstructured = [
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
+    "nltk>=3.10.0",
     "unstructured[all-docs]>=0.16",
     "python-magic>=0.4; platform_system != 'Windows'",
     "python-magic-bin>=0.4; platform_system == 'Windows'",
@@ -49,6 +50,7 @@ unstructured = [
 unstructured-minimal = [
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
+    "nltk>=3.10.0",
     "unstructured>=0.16",
 ]
 all = [
@@ -64,6 +66,7 @@ all = [
     "supabase>=2.0",
     "llama-index-core>=0.12",
     "llama-index-readers-file>=0.4",
+    "nltk>=3.10.0",
     "unstructured[all-docs]>=0.16",
     "python-magic>=0.4",
 ]
@@ -131,4 +134,3 @@ module = [
     "supabase.*",
 ]
 ignore_missing_imports = true
-

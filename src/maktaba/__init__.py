@@ -19,7 +19,7 @@ from .models import (
     VectorStoreConfig,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.25"
 
 __all__ = [
     # Exceptions
