@@ -1,6 +1,7 @@
 """Tests for vector storage implementations."""
 
 import pytest
+from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from maktaba.models import NodeRelationship, RelationshipType, VectorChunk
 from maktaba.storage.qdrant import QdrantStore
@@ -446,6 +447,72 @@ async def test_qdrant_fetch_by_ids_preserves_namespace_and_filter_scope():
     assert [result.id for result in allowed] == ["book_123#page_2"]
     assert wrong_namespace == []
     assert wrong_filter == []
+
+
+@pytest.mark.asyncio
+async def test_qdrant_fetch_by_ids_enforces_native_nested_filter_server_side():
+    """Relationship expansion supports complex visibility filters safely."""
+    store = QdrantStore(url=":memory:", collection_name="test_native_scoped_fetch")
+    store.create_collection(dimension=3)
+    await store.upsert(
+        [
+            VectorChunk(
+                id="public#page_1",
+                vector=[1.0, 0.0, 0.0],
+                metadata={"text": "Public", "scope": "public", "tier": "mainstream"},
+            ),
+            VectorChunk(
+                id="owned#page_1",
+                vector=[0.9, 0.1, 0.0],
+                metadata={
+                    "text": "Owned private",
+                    "scope": "private",
+                    "owner_user_id": "user-1",
+                    "tier": "mainstream",
+                },
+            ),
+            VectorChunk(
+                id="other#page_1",
+                vector=[0.8, 0.2, 0.0],
+                metadata={
+                    "text": "Other private",
+                    "scope": "private",
+                    "owner_user_id": "user-2",
+                    "tier": "mainstream",
+                },
+            ),
+            VectorChunk(
+                id="heterodox#page_1",
+                vector=[0.7, 0.3, 0.0],
+                metadata={"text": "Excluded tier", "scope": "public", "tier": "heterodox"},
+            ),
+        ],
+        namespace="tenant-a",
+    )
+    visibility_filter = Filter(
+        must=[
+            Filter(
+                should=[
+                    FieldCondition(key="scope", match=MatchValue(value="public")),
+                    Filter(
+                        must=[
+                            FieldCondition(key="scope", match=MatchValue(value="private")),
+                            FieldCondition(key="owner_user_id", match=MatchValue(value="user-1")),
+                        ]
+                    ),
+                ]
+            ),
+            FieldCondition(key="tier", match=MatchValue(value="mainstream")),
+        ]
+    )
+
+    results = await store.fetch_by_ids(
+        ["public#page_1", "owned#page_1", "other#page_1", "heterodox#page_1"],
+        namespace="tenant-a",
+        filter=visibility_filter,
+    )
+
+    assert {result.id for result in results} == {"public#page_1", "owned#page_1"}
 
 
 # Test 10: Query without relationships
