@@ -369,31 +369,47 @@ class QdrantStore(BaseVectorStore):
         ids: List[str],
         *,
         namespace: Optional[str] = None,
-        filter: Optional[Dict[str, Any]] = None,
+        filter: Optional[Union[Dict[str, Any], Filter]] = None,
         includeMetadata: bool = True,
         includeRelationships: bool = False,
     ) -> List[SearchResult]:
-        """Fetch related chunks and re-apply caller scope locally."""
+        """Fetch related chunks without weakening the caller's scope filter."""
         if not ids:
-            return []
-        # A provider-native Filter cannot be evaluated safely after direct ID
-        # retrieval, so fail closed instead of bypassing it.
-        if filter is not None and not isinstance(filter, dict):
             return []
         try:
             point_ids = [_original_id_to_uuid(item) for item in ids] if self._use_uuid else ids
-            points = self.client.retrieve(
-                collection_name=self.collection_name,
-                ids=point_ids,
-                with_payload=True,
-                with_vectors=False,
-            )
+            if isinstance(filter, Filter):
+                # Direct ``retrieve`` cannot apply a Qdrant Filter. Use scroll
+                # with an ID condition so nested visibility filters (for
+                # example public OR own-private) are enforced server-side.
+                conditions: List[Any] = [filter, HasIdCondition(has_id=point_ids)]
+                if namespace is not None:
+                    conditions.append(
+                        FieldCondition(
+                            key="namespace",
+                            match=MatchValue(value=namespace),
+                        )
+                    )
+                points, _ = self.client.scroll(
+                    collection_name=self.collection_name,
+                    scroll_filter=Filter(must=conditions),
+                    limit=len(point_ids),
+                    with_payload=True,
+                    with_vectors=False,
+                )
+            else:
+                points = self.client.retrieve(
+                    collection_name=self.collection_name,
+                    ids=point_ids,
+                    with_payload=True,
+                    with_vectors=False,
+                )
             results: List[SearchResult] = []
             for point in points:
                 payload = dict(point.payload or {})
                 if namespace is not None and payload.get("namespace") != namespace:
                     continue
-                if not metadata_matches_filter(payload, filter):
+                if isinstance(filter, dict) and not metadata_matches_filter(payload, filter):
                     continue
                 relationships = None
                 if includeRelationships:

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-06
+
+### Fixed
+- **Qdrant relationship expansion with native filters** now combines requested chunk IDs, namespace, and nested Qdrant visibility filters in one server-side query. Agentic traversal can therefore follow related chunks for scoped public/private corpora without bypassing access controls or failing closed unnecessarily.
+
 ## [0.2.0] - 2026-08-06
 
 ### Added
@@ -308,6 +313,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/nuhatech/maktaba/compare/v0.1.25...v0.2.0
+[0.2.1]: https://github.com/nuhatech/maktaba/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/nuhatech/maktaba/compare/v0.1.25...v0.2.0
 [0.1.25]: https://github.com/nuhatech/maktaba/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/nuhatech/maktaba/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/nuhatech/maktaba/compare/v0.1.22...v0.1.23
@@ -333,4 +340,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0
-
