@@ -12,12 +12,14 @@ class AgenticPrompts:
 
     generate_queries_prompt: str
     evaluate_sources_prompt: str
+    assess_evidence_prompt: str | None = None
 
     def copy(self) -> "AgenticPrompts":
         """Return a copy of the prompts."""
         return AgenticPrompts(
             generate_queries_prompt=self.generate_queries_prompt,
             evaluate_sources_prompt=self.evaluate_sources_prompt,
+            assess_evidence_prompt=self.assess_evidence_prompt,
         )
 
 
@@ -46,6 +48,7 @@ def default_prompts(
     context: str | None = None,
     generate_queries_append: str | None = None,
     evaluate_sources_append: str | None = None,
+    assess_evidence_append: str | None = None,
 ) -> AgenticPrompts:
     """
     Return default prompt templates for agentic operations.
@@ -55,6 +58,7 @@ def default_prompts(
         context: Custom context header (overrides default date context if provided)
         generate_queries_append: Additional instructions to append to query generation prompt
         evaluate_sources_append: Additional instructions to append to source evaluation prompt
+        assess_evidence_append: Additional instructions for structured evidence assessment
 
     Returns:
         AgenticPrompts instance with formatted prompts
@@ -108,7 +112,34 @@ Only return true if the sources directly contain the information needed to provi
         header,
     )
 
+    assess_evidence_base = """You are an evidence auditor for a retrieval system. Assess only whether the supplied evidence can support a complete answer to the user's request.
+
+Be conservative. Do not use outside knowledge. Mark answerable true only when every material requirement is directly supported and unresolved contradictions are absent. Source IDs must come from the supplied evidence. Propose only the smallest useful next actions.
+
+Return one JSON object with this shape:
+{{
+  "answerable": false,
+  "confidence": 0.0,
+  "coverage": [{{"requirement": "...", "covered": false, "supporting_source_ids": [], "note": "..."}}],
+  "missing_information": ["..."],
+  "contradictions": ["..."],
+  "supporting_source_ids": ["..."],
+  "next_actions": [
+    {{"type": "search", "query": "...", "query_type": "semantic", "rationale": "..."}},
+    {{"type": "expand", "source_ids": ["..."], "relationship_types": ["PREVIOUS", "NEXT"], "rationale": "..."}}
+  ],
+  "rationale": "..."
+}}
+
+Allowed query types are semantic and keyword. Do not invent filters, namespaces, or source IDs."""
+
+    assess_evidence_prompt = _with_context(
+        _append(assess_evidence_base, assess_evidence_append),
+        header,
+    )
+
     return AgenticPrompts(
         generate_queries_prompt=generate_queries_prompt,
         evaluate_sources_prompt=evaluate_sources_prompt,
+        assess_evidence_prompt=assess_evidence_prompt,
     )

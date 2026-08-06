@@ -203,6 +203,29 @@ async def test_openai_llm_evaluate_sources_false():
 
 
 @pytest.mark.asyncio
+async def test_openai_llm_evaluate_sources_string_false_fails_closed():
+    """A JSON string value must not be treated as a truthy boolean."""
+    with patch("openai.AsyncOpenAI") as MockOpenAI:
+        mock_client = AsyncMock()
+        MockOpenAI.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.usage.prompt_tokens = 10
+        mock_response.usage.completion_tokens = 2
+        mock_response.choices = [
+            MagicMock(message=MagicMock(content=json.dumps({"canAnswer": "false"})))
+        ]
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        llm = OpenAILLM(api_key="test-key")
+        can_answer, _usage = await llm.evaluate_sources(
+            messages=[("user", "Question?")],
+            sources=["Incomplete evidence"],
+        )
+
+        assert can_answer is False
+
+
+@pytest.mark.asyncio
 async def test_openai_llm_generate_queries_api_failure():
     """Test graceful handling of API failures during query generation."""
     with patch("openai.AsyncOpenAI") as MockOpenAI:
@@ -227,7 +250,7 @@ async def test_openai_llm_generate_queries_api_failure():
 
 @pytest.mark.asyncio
 async def test_openai_llm_evaluate_sources_api_failure():
-    """Test graceful handling of API failures during source evaluation."""
+    """Evaluation failures must fail closed instead of authorising an answer."""
     with patch("openai.AsyncOpenAI") as MockOpenAI:
         mock_client = AsyncMock()
         MockOpenAI.return_value = mock_client
@@ -239,12 +262,12 @@ async def test_openai_llm_evaluate_sources_api_failure():
 
         llm = OpenAILLM(api_key="test-key")
 
-        # Should return True (optimistic fallback) and zero usage
+        # An unavailable evaluator is not evidence that an answer is supported.
         can_answer, usage = await llm.evaluate_sources(
             messages=[("user", "Test?")], sources=["Some text"]
         )
 
-        assert can_answer is True  # Optimistic fallback
+        assert can_answer is False
         assert usage.total_tokens == 0
 
 

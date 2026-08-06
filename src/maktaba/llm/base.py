@@ -1,9 +1,12 @@
 """Base LLM interface for agentic query generation and evaluation."""
 
 from abc import ABC, abstractmethod
-from typing import AsyncIterator, Dict, List, Tuple
+from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Tuple
 
 from ..models import LLMUsage
+
+if TYPE_CHECKING:
+    from ..pipeline.agentic_models import EvidenceAssessment, EvidenceItem
 
 
 class BaseLLM(ABC):
@@ -144,6 +147,34 @@ class BaseLLM(ABC):
                 - usage: LLMUsage object with token counts
         """
         raise NotImplementedError
+
+    async def assess_evidence(
+        self,
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+    ) -> Tuple["EvidenceAssessment", LLMUsage]:
+        """Return a structured assessment of the current evidence.
+
+        The default adapter keeps existing third-party ``BaseLLM``
+        implementations compatible by delegating to ``evaluate_sources``.
+        Providers can override this method to report coverage gaps,
+        contradictions, supporting IDs, and bounded next actions.
+        """
+        from ..pipeline.agentic_models import EvidenceAssessment
+
+        can_answer, usage = await self.evaluate_sources(
+            messages=messages,
+            sources=[item.text for item in evidence],
+        )
+        return (
+            EvidenceAssessment(
+                answerable=can_answer,
+                confidence=1.0 if can_answer else 0.0,
+                supporting_source_ids=[item.id for item in evidence] if can_answer else [],
+                valid=True,
+            ),
+            usage,
+        )
 
     async def condense_query(
         self,

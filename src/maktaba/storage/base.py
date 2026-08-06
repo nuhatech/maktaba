@@ -6,6 +6,58 @@ from typing import Any, Dict, List, Optional
 from ..models import SearchResult, VectorChunk
 
 
+def metadata_matches_filter(metadata: Dict[str, Any], filter: Optional[Dict[str, Any]]) -> bool:
+    """Conservatively evaluate common metadata-filter syntax.
+
+    This is used only when a provider cannot atomically fetch IDs with a
+    server-side filter. Unknown operators fail closed so relationship expansion
+    cannot escape the caller's retrieval scope.
+    """
+    if not filter:
+        return True
+
+    def _compare(actual: Any, condition: Any) -> bool:
+        if not isinstance(condition, dict):
+            return actual == condition or (isinstance(condition, list) and actual in condition)
+        for operator, expected in condition.items():
+            if operator == "$eq" and actual != expected:
+                return False
+            if operator == "$ne" and actual == expected:
+                return False
+            if operator == "$in" and (not isinstance(expected, list) or actual not in expected):
+                return False
+            if operator == "$nin" and (not isinstance(expected, list) or actual in expected):
+                return False
+            if operator == "$gt" and not (isinstance(actual, (int, float)) and actual > expected):
+                return False
+            if operator == "$gte" and not (isinstance(actual, (int, float)) and actual >= expected):
+                return False
+            if operator == "$lt" and not (isinstance(actual, (int, float)) and actual < expected):
+                return False
+            if operator == "$lte" and not (isinstance(actual, (int, float)) and actual <= expected):
+                return False
+            if operator not in {"$eq", "$ne", "$in", "$nin", "$gt", "$gte", "$lt", "$lte"}:
+                return False
+        return True
+
+    for key, condition in filter.items():
+        if key == "$and":
+            if not isinstance(condition, list) or not all(
+                isinstance(item, dict) and metadata_matches_filter(metadata, item) for item in condition
+            ):
+                return False
+            continue
+        if key == "$or":
+            if not isinstance(condition, list) or not any(
+                isinstance(item, dict) and metadata_matches_filter(metadata, item) for item in condition
+            ):
+                return False
+            continue
+        if key.startswith("$") or not _compare(metadata.get(key), condition):
+            return False
+    return True
+
+
 class BaseVectorStore(ABC):
     """
     Abstract base class for vector storage providers.
@@ -101,6 +153,22 @@ class BaseVectorStore(ABC):
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement delete_by_document"
         )
+
+    async def fetch_by_ids(
+        self,
+        ids: List[str],
+        *,
+        namespace: Optional[str] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        includeMetadata: bool = True,
+        includeRelationships: bool = False,
+    ) -> List[SearchResult]:
+        """Fetch chunks by ID without weakening namespace or metadata scope.
+
+        The optional default keeps existing custom stores source compatible.
+        Returning an empty list signals that direct expansion is unsupported.
+        """
+        return []
 
     @abstractmethod
     async def list(

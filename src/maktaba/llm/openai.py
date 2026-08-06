@@ -1,12 +1,17 @@
 """OpenAI LLM implementation for agentic query generation and evaluation."""
 
+from __future__ import annotations
+
 import json
-from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, List, Optional, Tuple
 
 from ..logging import get_logger
 from ..models import LLMUsage
 from .base import BaseLLM
 from .prompts import AgenticPrompts, default_prompts
+
+if TYPE_CHECKING:
+    from ..pipeline.agentic_models import EvidenceAssessment, EvidenceItem
 
 
 class OpenAILLM(BaseLLM):
@@ -332,13 +337,49 @@ class OpenAILLM(BaseLLM):
                 prompt=user_prompt,
                 temperature=self.temperature,
             )
-            can_answer_raw = result.get("canAnswer", True)
-            # Type check: ensure can_answer is a bool
-            can_answer = bool(can_answer_raw) if isinstance(can_answer_raw, (bool, int, str)) else True
+            can_answer_raw = result.get("canAnswer")
+            # Fail closed: strings such as "false" must never become truthy.
+            can_answer = can_answer_raw if isinstance(can_answer_raw, bool) else False
 
             self._logger.info(f"Source evaluation: canAnswer={can_answer} (tokens: {usage.total_tokens})")
             return can_answer, usage
 
         except Exception as e:
             self._logger.error(f"Source evaluation failed: {e}", exc_info=True)
-            return True, LLMUsage()  # Optimistic fallback
+            return False, LLMUsage()
+
+    async def assess_evidence(
+        self,
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+    ) -> Tuple["EvidenceAssessment", LLMUsage]:
+        """Assess ranked evidence and return validated Agentic v2 controls."""
+        from ..pipeline.agentic_models import EvidenceAssessment
+
+        chat_history = self._format_chat_history(messages)
+        evidence_text = "\n\n".join(
+            (
+                f'<evidence id="{item.id}" rank="{item.rank}" score="{item.score}">\n'
+                f"{item.text}\n</evidence>"
+            )
+            for item in evidence
+        )
+        prompt = f"Chat history:\n{chat_history}\n\nRanked evidence:\n{evidence_text}"
+        result, usage = await self.complete_json(
+            system=self.prompts.assess_evidence_prompt or self.prompts.evaluate_sources_prompt,
+            prompt=prompt,
+            temperature=self.temperature,
+        )
+        assessment = EvidenceAssessment.from_mapping(
+            result,
+            valid_source_ids=[item.id for item in evidence],
+        )
+        self._logger.info(
+            "Evidence assessment: answerable=%s valid=%s gaps=%d actions=%d (tokens: %d)",
+            assessment.answerable,
+            assessment.valid,
+            len(assessment.missing_information),
+            len(assessment.next_actions),
+            usage.total_tokens,
+        )
+        return assessment, usage

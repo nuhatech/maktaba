@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml/badge.svg)](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/maktaba.svg)](https://badge.fury.io/py/maktaba)
-[![Version](https://img.shields.io/badge/version-0.1.25-blue.svg)](https://github.com/nuhatech/maktaba/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/nuhatech/maktaba/releases)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -19,6 +19,7 @@
 - 📊 **Type-safe**: Full type hints and Pydantic validation
 - 🧪 **Well-tested**: Comprehensive test coverage
 - 🔍 **Deep research**: Built-in iterative planning for long-form reports
+- 🧭 **Agentic Search v2**: Evidence-gap planning, global fusion, graph expansion, provenance, and explicit abstention
 
 ## Installation
 
@@ -78,6 +79,38 @@ print(result["formatted_context"])  # [1]: content... [2]: content...
 print(result["citations"])          # [{id: 1, source: "...", score: 0.95}, ...]
 ```
 
+### Agentic Search v2
+
+```python
+from maktaba.pipeline import AgenticQueryPipeline, AgenticSearchConfig
+
+pipeline = AgenticQueryPipeline(
+    embedder=embedder,
+    store=store,
+    keyword_store=keyword_store,
+    reranker=reranker,
+    llm=llm,
+)
+
+result = await pipeline.agentic_search(
+    [("user", "Compare the available evidence and identify disagreements")],
+    includeRelationships=True,
+    config=AgenticSearchConfig(
+        max_iterations=4,
+        max_total_queries=20,
+        token_budget=8_000,
+        evidence_limit=15,
+    ),
+)
+
+if not result["answerable"]:
+    print("Insufficient evidence:", result["stop_reason"])
+else:
+    print(result["formatted_context"])
+```
+
+Agentic v2 preserves the original method and return keys. It adds structured assessment, evidence provenance, iteration traces, bounded relationship expansion, and a fail-closed `answerable` signal. See [AgenticV2.md](./docs/AgenticV2.md) for the complete contract and migration notes.
+
 ### Deep Research Pipeline
 Learn how to customise the default prompts via [`maktaba_templates.md`](./docs/Templates.md).
 
@@ -132,6 +165,7 @@ All checks must pass before pushing.
 - Overview: docs/Overview.md
 - Quickstart: docs/Quickstart.md
 - Pipelines: docs/Pipelines.md
+- Agentic Search v2: docs/AgenticV2.md
 - Providers: docs/Providers.md
 - Examples: docs/Examples.md
 - Troubleshooting: docs/Troubleshooting.md

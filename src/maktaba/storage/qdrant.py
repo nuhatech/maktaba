@@ -1,13 +1,14 @@
 """Qdrant vector store implementation - Pinecone-compatible interface."""
 
 import uuid
-from typing import Any, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
+    HasIdCondition,
     MatchAny,
     MatchValue,
     PointStruct,
@@ -16,7 +17,7 @@ from qdrant_client.models import (
 
 from ..exceptions import StorageError
 from ..models import NodeRelationship, SearchResult, VectorChunk
-from .base import BaseVectorStore
+from .base import BaseVectorStore, metadata_matches_filter
 
 # UUID namespace for generating deterministic UUIDs from original IDs
 _MAKTABA_UUID_NAMESPACE = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
@@ -229,10 +230,15 @@ class QdrantStore(BaseVectorStore):
                         key="namespace",
                         match=MatchValue(value=namespace),
                     )
-                    existing_must = list(filter.must or [])
+                    if filter.must is None:
+                        existing_must: List[Any] = []
+                    elif isinstance(filter.must, list):
+                        existing_must = list(filter.must)
+                    else:
+                        existing_must = [filter.must]
                     existing_must.append(ns_cond)
                     qdrant_filter = Filter(
-                        must=cast(Sequence[Any], existing_must),
+                        must=existing_must,
                         should=filter.should,
                         must_not=filter.must_not,
                     )
@@ -270,7 +276,7 @@ class QdrantStore(BaseVectorStore):
                             )
 
                 if conditions:
-                    qdrant_filter = Filter(must=cast(Sequence[Any], conditions))
+                    qdrant_filter = Filter(must=conditions)  # type: ignore[arg-type]
 
             # Query (using modern query_points API)
             response = self.client.query_points(
@@ -278,7 +284,7 @@ class QdrantStore(BaseVectorStore):
                 query=vector,
                 limit=topK,
                 query_filter=qdrant_filter,
-                with_payload=includeMetadata,
+                with_payload=includeMetadata or includeRelationships,
             )
             results = response.points
 
@@ -309,7 +315,7 @@ class QdrantStore(BaseVectorStore):
                     SearchResult(
                         id=result_id,
                         score=result.score,
-                        metadata=result.payload or {} if includeMetadata else {},
+                        metadata=(result.payload or {}) if includeMetadata else {},
                         relationships=relationships,
                     )
                 )
@@ -330,7 +336,9 @@ class QdrantStore(BaseVectorStore):
 
         try:
             # Convert original IDs to UUIDs if in UUID mode
-            delete_ids = [_original_id_to_uuid(id) for id in ids] if self._use_uuid else ids
+            delete_ids: List[Union[int, str]] = (
+                [_original_id_to_uuid(item_id) for item_id in ids] if self._use_uuid else list(ids)
+            )
 
             # If namespace is provided, filter by namespace
             if namespace:
@@ -342,10 +350,7 @@ class QdrantStore(BaseVectorStore):
                                 key="namespace",
                                 match=MatchValue(value=namespace),
                             ),
-                            FieldCondition(
-                                key="id",
-                                match=MatchValue(value=delete_ids),
-                            ),
+                            HasIdCondition(has_id=delete_ids),
                         ]
                     ),
                 )
@@ -358,6 +363,59 @@ class QdrantStore(BaseVectorStore):
 
         except Exception as e:
             raise StorageError(f"Qdrant delete failed: {str(e)}") from e
+
+    async def fetch_by_ids(
+        self,
+        ids: List[str],
+        *,
+        namespace: Optional[str] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        includeMetadata: bool = True,
+        includeRelationships: bool = False,
+    ) -> List[SearchResult]:
+        """Fetch related chunks and re-apply caller scope locally."""
+        if not ids:
+            return []
+        # A provider-native Filter cannot be evaluated safely after direct ID
+        # retrieval, so fail closed instead of bypassing it.
+        if filter is not None and not isinstance(filter, dict):
+            return []
+        try:
+            point_ids = [_original_id_to_uuid(item) for item in ids] if self._use_uuid else ids
+            points = self.client.retrieve(
+                collection_name=self.collection_name,
+                ids=point_ids,
+                with_payload=True,
+                with_vectors=False,
+            )
+            results: List[SearchResult] = []
+            for point in points:
+                payload = dict(point.payload or {})
+                if namespace is not None and payload.get("namespace") != namespace:
+                    continue
+                if not metadata_matches_filter(payload, filter):
+                    continue
+                relationships = None
+                if includeRelationships:
+                    rels = payload.get("_relationships")
+                    if isinstance(rels, dict):
+                        relationships = {
+                            rel_type: NodeRelationship.from_dict(rel_value)
+                            if isinstance(rel_value, dict) and "node_id" in rel_value
+                            else rel_value
+                            for rel_type, rel_value in rels.items()
+                        }
+                original_id = payload.get("_original_id", str(point.id))
+                results.append(
+                    SearchResult(
+                        id=str(original_id),
+                        metadata=payload if includeMetadata else {},
+                        relationships=relationships,
+                    )
+                )
+            return results
+        except Exception as e:
+            raise StorageError(f"Qdrant fetch_by_ids failed: {str(e)}") from e
 
     async def delete_by_document(
         self,
@@ -388,7 +446,7 @@ class QdrantStore(BaseVectorStore):
             while True:
                 scroll_result = self.client.scroll(
                     collection_name=self.collection_name,
-                    scroll_filter=Filter(must=cast(Sequence[Any], conditions)) if conditions else None,
+                    scroll_filter=Filter(must=conditions) if conditions else None,  # type: ignore[arg-type]
                     limit=100,
                     offset=offset,
                     with_payload=self._use_uuid,  # Need payload to check _original_id
@@ -448,7 +506,7 @@ class QdrantStore(BaseVectorStore):
 
             scroll_result = self.client.scroll(
                 collection_name=self.collection_name,
-                scroll_filter=Filter(must=cast(Sequence[Any], conditions)) if conditions else None,
+                scroll_filter=Filter(must=conditions) if conditions else None,  # type: ignore[arg-type]
                 limit=limit,
                 with_payload=self._use_uuid,  # Need payload for _original_id
             )
