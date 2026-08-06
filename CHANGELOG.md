@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-06
+
+### Added
+- **Generic verified evidence collection** with `AgenticCollectionPipeline`, `CollectionGoal`, exact source spans, target counts, per-document and metadata diversity limits, partial results, bounded rejection diagnostics, and explicit stop reasons.
+- **Objective-specific evidence assessment hooks** in Agentic Search v2 so applications can reuse the existing retrieval/fusion/expansion loop without duplicating it.
+- **OpenAI structured collection extraction and gap planning** with prompts that treat retrieved documents as untrusted data and require exact supplied source IDs and contiguous source spans.
+- **Deterministic span verification** with exact matching first and a whitespace-only fallback that always returns the original source slice and character offsets.
+
+### Changed
+- `AgenticPrompts` now carries optional collection extraction and planning templates while remaining compatible with existing prompt construction.
+- Existing `BaseLLM` implementations remain compatible through default no-op extraction and an evidence-assessment planning adapter.
+
+### Fixed
+- The package-level `__version__` now matches the project version.
+- Qdrant relationship-fetch point IDs are explicitly typed for current qdrant-client stubs.
+
 ## [0.2.1] - 2026-08-06
 
 ### Fixed
@@ -311,8 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/nuhatech/maktaba/compare/v0.1.25...v0.2.0
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/nuhatech/maktaba/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/nuhatech/maktaba/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nuhatech/maktaba/compare/v0.1.25...v0.2.0
 [0.1.25]: https://github.com/nuhatech/maktaba/compare/v0.1.24...v0.1.25

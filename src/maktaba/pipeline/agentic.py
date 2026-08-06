@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Protocol, Sequence, Tuple, Union
 
 from ..citation.formatter import format_with_citations
 from ..embedding.base import BaseEmbedder
@@ -28,6 +28,18 @@ from .agentic_models import (
     SearchQuery,
     StopReason,
 )
+
+
+class EvidenceAssessor(Protocol):
+    """Optional objective-specific assessment hook for the retrieval loop."""
+
+    async def assess(
+        self,
+        *,
+        llm: BaseLLM,
+        messages: List[Tuple[str, str]],
+        evidence: List[EvidenceItem],
+    ) -> Tuple[EvidenceAssessment, LLMUsage]: ...
 
 
 class AgenticQueryPipeline:
@@ -202,6 +214,7 @@ class AgenticQueryPipeline:
         includeMetadata: bool = True,
         includeRelationships: bool = False,
         include_query_results: bool = False,
+        evidence_assessor: Optional[EvidenceAssessor] = None,
         config: Optional[AgenticSearchConfig] = None,
     ) -> Dict[str, Any]:
         """Run a bounded evidence-seeking loop.
@@ -395,10 +408,17 @@ class AgenticQueryPipeline:
                 traces.append(trace)
                 break
 
-            assessment, usage = await self.llm.assess_evidence(
-                messages=normalised,
-                evidence=evidence,
-            )
+            if evidence_assessor is None:
+                assessment, usage = await self.llm.assess_evidence(
+                    messages=normalised,
+                    evidence=evidence,
+                )
+            else:
+                assessment, usage = await evidence_assessor.assess(
+                    llm=self.llm,
+                    messages=normalised,
+                    evidence=evidence,
+                )
             total_usage += usage
             last_assessment = assessment
             trace.assessment = assessment.to_dict()
