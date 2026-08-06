@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from ..exceptions import StorageError
 from ..models import NodeRelationship, SearchResult, VectorChunk
-from .base import BaseVectorStore
+from .base import BaseVectorStore, metadata_matches_filter
 
 
 class WeaviateStore(BaseVectorStore):
@@ -165,6 +165,61 @@ class WeaviateStore(BaseVectorStore):
                 self._client.data_object.delete(_id, class_name=self._class_name)
         except Exception as e:
             raise StorageError(f"Weaviate delete failed: {str(e)}") from e
+
+    async def fetch_by_ids(
+        self,
+        ids: List[str],
+        *,
+        namespace: Optional[str] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        includeMetadata: bool = True,
+        includeRelationships: bool = False,
+    ) -> List[SearchResult]:
+        if not ids:
+            return []
+        try:
+            effective_namespace = namespace or self._namespace
+            results: List[SearchResult] = []
+            for item_id in ids:
+                item = self._client.data_object.get_by_id(item_id, class_name=self._class_name)
+                if not item:
+                    continue
+                properties = item.get("properties", item) if isinstance(item, dict) else {}
+                raw_metadata = properties.get("metadata") if isinstance(properties, dict) else None
+                if isinstance(raw_metadata, str):
+                    try:
+                        metadata = json.loads(raw_metadata)
+                    except (json.JSONDecodeError, TypeError):
+                        metadata = {}
+                else:
+                    metadata = dict(raw_metadata or {})
+                if properties.get("text") is not None:
+                    metadata.setdefault("text", properties["text"])
+                if properties.get("namespace") is not None:
+                    metadata.setdefault("namespace", properties["namespace"])
+                if effective_namespace is not None and metadata.get("namespace") != effective_namespace:
+                    continue
+                if not metadata_matches_filter(metadata, filter):
+                    continue
+                relationships = None
+                if includeRelationships and isinstance(metadata.get("_relationships"), dict):
+                    relationships = {
+                        rel_type: NodeRelationship.from_dict(rel_value)
+                        if isinstance(rel_value, dict) and "node_id" in rel_value
+                        else rel_value
+                        for rel_type, rel_value in metadata["_relationships"].items()
+                    }
+                result_id = item.get("id", item_id) if isinstance(item, dict) else item_id
+                results.append(
+                    SearchResult(
+                        id=str(result_id),
+                        metadata=metadata if includeMetadata else {},
+                        relationships=relationships,
+                    )
+                )
+            return results
+        except Exception as e:
+            raise StorageError(f"Weaviate fetch_by_ids failed: {str(e)}") from e
 
     async def list(
         self,

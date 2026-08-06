@@ -7,10 +7,10 @@ try:
     from supabase import Client as SyncClient
     from supabase import create_client as create_sync_client
 
-    Client: type[SyncClient] | None = SyncClient  # type: ignore[assignment, misc]
+    Client: type[SyncClient] | None = SyncClient
     create_client = create_sync_client
 except ImportError:
-    Client = None  # type: ignore[assignment]
+    Client = None
     create_client = None  # type: ignore[assignment]
 
 from ..exceptions import StorageError

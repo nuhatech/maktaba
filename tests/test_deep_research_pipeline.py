@@ -196,7 +196,7 @@ async def test_deep_research_pipeline_basic_flow():
 
     answer_prompt = (
         "Research Topic: Climate impacts\n\n"
-        "Search Results:\n[1] ID: q1\nMetadata: {'text': 'Record warmth observed'}\nContent: Summary doc1"
+        "Search Results:\n[1] ID: q1\nMetadata: {'text': 'Record warmth observed'}\nContent: Record warmth observed"
     )
     answer_llm.register_stream(prompts.answer_prompt, answer_prompt, "Final answer content")
 
@@ -235,6 +235,8 @@ async def test_deep_research_pipeline_basic_flow():
     assert result.queries_used == ["climate effects 2024", "economic impact climate change"]
     assert result.source_indices == [1]
     assert [view.id for view in result.results.results] == ["q1"]
+    assert result.results.results[0].content == "Summary doc1"
+    assert result.results.results[0].raw_content == "Record warmth observed"
     assert fake_pipeline.calls == ["climate effects 2024", "economic impact climate change"]
 
 
