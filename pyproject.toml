@@ -1,6 +1,6 @@
 [project]
 name = "maktaba"
-version = "0.2.1"
+version = "0.3.0"
 description = "Production-ready RAG infrastructure for multilingual applications"
 authors = [
     {name = "NuhaTech", email = "contact@nuhatech.com"}

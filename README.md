@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml/badge.svg)](https://github.com/nuhatech/maktaba/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/maktaba.svg)](https://badge.fury.io/py/maktaba)
-[![Version](https://img.shields.io/badge/version-0.2.1-blue.svg)](https://github.com/nuhatech/maktaba/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/nuhatech/maktaba/releases)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -20,6 +20,7 @@
 - 🧪 **Well-tested**: Comprehensive test coverage
 - 🔍 **Deep research**: Built-in iterative planning for long-form reports
 - 🧭 **Agentic Search v2**: Evidence-gap planning, global fusion, graph expansion, provenance, and explicit abstention
+- 📚 **Verified collections**: Collect an exact number of source-grounded spans with deterministic verification and partial results
 
 ## Installation
 
@@ -111,6 +112,34 @@ else:
 
 Agentic v2 preserves the original method and return keys. It adds structured assessment, evidence provenance, iteration traces, bounded relationship expansion, and a fail-closed `answerable` signal. See [AgenticV2.md](./docs/AgenticV2.md) for the complete contract and migration notes.
 
+### Verified evidence collection
+
+```python
+from maktaba.pipeline import AgenticCollectionPipeline, CollectionGoal
+
+collector = AgenticCollectionPipeline(pipeline)
+collection = await collector.collect(
+    [("user", "Find five passages about patience")],
+    goal=CollectionGoal(
+        target_count=5,
+        item_description="distinct passages that directly discuss patience",
+        max_per_document=1,
+        diversity_metadata_keys=("author_id",),
+    ),
+    includeRelationships=True,
+    config=AgenticSearchConfig(max_iterations=4, token_budget=8_000),
+)
+
+for item in collection.items:
+    # Every item is sliced from the original SearchResult text.
+    print(item.text, item.source_id, item.start_offset, item.end_offset)
+
+if not collection.complete:
+    print("Verified partial result:", collection.stop_reason)
+```
+
+See [AgenticCollection.md](./docs/AgenticCollection.md) for provider hooks, security invariants, and the result contract.
+
 ### Deep Research Pipeline
 Learn how to customise the default prompts via [`maktaba_templates.md`](./docs/Templates.md).
 
@@ -166,6 +195,7 @@ All checks must pass before pushing.
 - Quickstart: docs/Quickstart.md
 - Pipelines: docs/Pipelines.md
 - Agentic Search v2: docs/AgenticV2.md
+- Verified evidence collection: docs/AgenticCollection.md
 - Providers: docs/Providers.md
 - Examples: docs/Examples.md
 - Troubleshooting: docs/Troubleshooting.md

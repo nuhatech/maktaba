@@ -11,6 +11,12 @@ from .base import BaseLLM
 from .prompts import AgenticPrompts, default_prompts
 
 if TYPE_CHECKING:
+    from ..collection_models import (
+        CollectionCandidate,
+        CollectionGoal,
+        EvidenceSpan,
+        RejectedCollectionCandidate,
+    )
     from ..pipeline.agentic_models import EvidenceAssessment, EvidenceItem
 
 
@@ -382,4 +388,95 @@ class OpenAILLM(BaseLLM):
             len(assessment.next_actions),
             usage.total_tokens,
         )
+        return assessment, usage
+
+    async def extract_collection_items(
+        self,
+        *,
+        goal: "CollectionGoal",
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+        accepted_items: List["EvidenceSpan"],
+    ) -> Tuple[List["CollectionCandidate"], LLMUsage]:
+        """Extract untrusted exact-span candidates using structured JSON."""
+        from ..collection_models import CollectionCandidate
+
+        chat_history = self._format_chat_history(messages)
+        evidence_text = "\n\n".join(
+            (
+                f'<evidence id="{item.id}" rank="{item.rank}" score="{item.score}">\n'
+                f"{item.text}\n</evidence>"
+            )
+            for item in evidence
+        )
+        accepted_text = "\n".join(
+            f'- source_id={item.source_id}; text={item.text[:240]!r}' for item in accepted_items
+        ) or "- none"
+        remaining = max(goal.target_count - len(accepted_items), 0)
+        prompt = (
+            f"{goal.to_prompt()}\n\n"
+            f"Remaining count: {remaining}\n\n"
+            f"Chat history:\n{chat_history}\n\n"
+            f"Already accepted items (do not duplicate):\n{accepted_text}\n\n"
+            f"Retrieved evidence:\n{evidence_text}"
+        )
+        result, usage = await self.complete_json(
+            system=self.prompts.extract_collection_prompt or self.prompts.assess_evidence_prompt or "",
+            prompt=prompt,
+            temperature=self.temperature,
+        )
+        raw_items = result.get("items", [])
+        parsed: List[CollectionCandidate] = []
+        if isinstance(raw_items, list):
+            for raw in raw_items[:remaining]:
+                candidate = CollectionCandidate.from_mapping(raw) if isinstance(raw, dict) else None
+                if candidate is not None:
+                    parsed.append(candidate)
+        return parsed, usage
+
+    async def plan_collection_actions(
+        self,
+        *,
+        goal: "CollectionGoal",
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+        accepted_items: List["EvidenceSpan"],
+        rejected_candidates: List["RejectedCollectionCandidate"],
+    ) -> Tuple["EvidenceAssessment", LLMUsage]:
+        """Return validated search/expand actions for remaining items."""
+        from ..pipeline.agentic_models import EvidenceAssessment
+
+        chat_history = self._format_chat_history(messages)
+        evidence_text = "\n\n".join(
+            (
+                f'<evidence id="{item.id}" rank="{item.rank}" score="{item.score}">\n'
+                f"{item.text}\n</evidence>"
+            )
+            for item in evidence
+        )
+        accepted_text = "\n".join(
+            f'- source_id={item.source_id}; text={item.text[:180]!r}' for item in accepted_items
+        ) or "- none"
+        rejected_text = "\n".join(
+            f"- source_id={item.source_id or 'unknown'}; reason={item.reason}"
+            for item in rejected_candidates[-20:]
+        ) or "- none"
+        prompt = (
+            f"{goal.to_prompt()}\n\n"
+            f"Verified count: {len(accepted_items)} of {goal.target_count}\n\n"
+            f"Chat history:\n{chat_history}\n\n"
+            f"Accepted item summaries:\n{accepted_text}\n\n"
+            f"Recent rejected candidates:\n{rejected_text}\n\n"
+            f"Ranked evidence:\n{evidence_text}"
+        )
+        result, usage = await self.complete_json(
+            system=self.prompts.plan_collection_prompt or self.prompts.assess_evidence_prompt or "",
+            prompt=prompt,
+            temperature=self.temperature,
+        )
+        assessment = EvidenceAssessment.from_mapping(
+            result,
+            valid_source_ids=[item.id for item in evidence],
+        )
+        assessment.answerable = False
         return assessment, usage
