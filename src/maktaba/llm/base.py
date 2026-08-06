@@ -6,6 +6,12 @@ from typing import TYPE_CHECKING, AsyncIterator, Dict, List, Tuple
 from ..models import LLMUsage
 
 if TYPE_CHECKING:
+    from ..collection_models import (
+        CollectionCandidate,
+        CollectionGoal,
+        EvidenceSpan,
+        RejectedCollectionCandidate,
+    )
     from ..pipeline.agentic_models import EvidenceAssessment, EvidenceItem
 
 
@@ -175,6 +181,45 @@ class BaseLLM(ABC):
             ),
             usage,
         )
+
+    async def extract_collection_items(
+        self,
+        *,
+        goal: "CollectionGoal",
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+        accepted_items: List["EvidenceSpan"],
+    ) -> Tuple[List["CollectionCandidate"], LLMUsage]:
+        """Propose exact source spans for a collection objective.
+
+        The default implementation returns no candidates so existing custom
+        providers remain source-compatible. Collection-capable providers can
+        override this method or callers can inject a custom objective assessor.
+        """
+
+        return [], LLMUsage()
+
+    async def plan_collection_actions(
+        self,
+        *,
+        goal: "CollectionGoal",
+        messages: List[Tuple[str, str]],
+        evidence: List["EvidenceItem"],
+        accepted_items: List["EvidenceSpan"],
+        rejected_candidates: List["RejectedCollectionCandidate"],
+    ) -> Tuple["EvidenceAssessment", LLMUsage]:
+        """Plan the next searches for an incomplete collection.
+
+        The compatibility adapter reuses the existing evidence assessor and
+        forces an incomplete signal; the collection objective itself decides
+        completion from verified item count.
+        """
+
+        augmented = list(messages)
+        augmented.append(("user", goal.to_prompt()))
+        assessment, usage = await self.assess_evidence(messages=augmented, evidence=evidence)
+        assessment.answerable = False
+        return assessment, usage
 
     async def condense_query(
         self,

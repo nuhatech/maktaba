@@ -377,7 +377,9 @@ class QdrantStore(BaseVectorStore):
         if not ids:
             return []
         try:
-            point_ids = [_original_id_to_uuid(item) for item in ids] if self._use_uuid else ids
+            point_ids: List[Union[int, str]] = (
+                [_original_id_to_uuid(item) for item in ids] if self._use_uuid else list(ids)
+            )
             if isinstance(filter, Filter):
                 # Direct ``retrieve`` cannot apply a Qdrant Filter. Use scroll
                 # with an ID condition so nested visibility filters (for
