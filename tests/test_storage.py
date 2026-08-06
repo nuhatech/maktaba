@@ -404,6 +404,50 @@ async def test_qdrant_store_node_relationships():
     assert source_rel.metadata["book_title"] == "Test Book"
 
 
+@pytest.mark.asyncio
+async def test_qdrant_fetch_by_ids_preserves_namespace_and_filter_scope():
+    """Direct relationship fetches must not bypass caller retrieval scope."""
+    store = QdrantStore(url=":memory:", collection_name="test_scoped_fetch")
+    store.create_collection(dimension=3)
+    await store.upsert(
+        [
+            VectorChunk(
+                id="book_123#page_1",
+                vector=[1.0, 0.0, 0.0],
+                metadata={"text": "Allowed page", "book_id": 123},
+                relationships={"NEXT": NodeRelationship(node_id="book_123#page_2")},
+            ),
+            VectorChunk(
+                id="book_123#page_2",
+                vector=[0.9, 0.1, 0.0],
+                metadata={"text": "Allowed continuation", "book_id": 123},
+            ),
+        ],
+        namespace="tenant-a",
+    )
+
+    allowed = await store.fetch_by_ids(
+        ["book_123#page_2"],
+        namespace="tenant-a",
+        filter={"book_id": 123},
+        includeRelationships=True,
+    )
+    wrong_namespace = await store.fetch_by_ids(
+        ["book_123#page_2"],
+        namespace="tenant-b",
+        filter={"book_id": 123},
+    )
+    wrong_filter = await store.fetch_by_ids(
+        ["book_123#page_2"],
+        namespace="tenant-a",
+        filter={"book_id": 999},
+    )
+
+    assert [result.id for result in allowed] == ["book_123#page_2"]
+    assert wrong_namespace == []
+    assert wrong_filter == []
+
+
 # Test 10: Query without relationships
 @pytest.mark.asyncio
 async def test_qdrant_store_relationships_disabled():

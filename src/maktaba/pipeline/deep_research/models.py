@@ -35,13 +35,14 @@ class SearchResultView:
     """
     Normalised representation of a search result used in deep research.
 
-    The pipeline stores summarised content rather than raw chunk text so we
-    provide a compact representation focused on the processed narrative.
+    ``content`` is the compact planning summary. ``raw_content`` preserves the
+    retrieved evidence so final synthesis never has to cite a lossy summary.
     """
 
     id: str
     content: str
     metadata: dict[str, Any] | None = None
+    raw_content: str | None = None
 
     @classmethod
     def from_search_result(cls, result: SearchResult, *, content: str | None = None) -> "SearchResultView":
@@ -49,6 +50,7 @@ class SearchResultView:
             id=result.id,
             metadata=(result.metadata or {}),
             content=content if content is not None else (result.text or ""),
+            raw_content=result.text or "",
         )
 
     def to_string(self) -> str:
@@ -60,6 +62,13 @@ class SearchResultView:
 
     def short_string(self) -> str:
         return self.to_string()
+
+    def to_evidence_string(self) -> str:
+        return (
+            f"ID: {self.id}\n"
+            f"Metadata: {self.metadata}\n"
+            f"Content: {self.raw_content if self.raw_content is not None else self.content}"
+        )
 
 
 @dataclass(slots=True)
@@ -86,6 +95,11 @@ class SearchResultsCollection:
 
     def short_string(self) -> str:
         return "\n\n".join(f"[{idx + 1}] {result.short_string()}" for idx, result in enumerate(self.results))
+
+    def to_evidence_string(self) -> str:
+        return "\n\n".join(
+            f"[{idx + 1}] {result.to_evidence_string()}" for idx, result in enumerate(self.results)
+        )
 
     @classmethod
     def from_sequence(cls, items: Sequence[SearchResultView]) -> "SearchResultsCollection":

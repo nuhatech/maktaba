@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from ..exceptions import StorageError
 from ..models import NodeRelationship, SearchResult, VectorChunk
-from .base import BaseVectorStore
+from .base import BaseVectorStore, metadata_matches_filter
 
 
 class PineconeStore(BaseVectorStore):
@@ -113,6 +113,52 @@ class PineconeStore(BaseVectorStore):
             self._index.delete(ids=ids, namespace=namespace or self._namespace)
         except Exception as e:
             raise StorageError(f"Pinecone delete failed: {str(e)}") from e
+
+    async def fetch_by_ids(
+        self,
+        ids: List[str],
+        *,
+        namespace: Optional[str] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        includeMetadata: bool = True,
+        includeRelationships: bool = False,
+    ) -> List[SearchResult]:
+        if not ids:
+            return []
+        try:
+            effective_namespace = namespace or self._namespace
+            response = self._index.fetch(ids=ids, namespace=effective_namespace)
+            vectors = getattr(response, "vectors", None)
+            if vectors is None and isinstance(response, dict):
+                vectors = response.get("vectors", {})
+            results: List[SearchResult] = []
+            for vector_id, item in (vectors or {}).items():
+                metadata_raw = getattr(item, "metadata", None)
+                if metadata_raw is None and isinstance(item, dict):
+                    metadata_raw = item.get("metadata")
+                metadata = dict(metadata_raw or {})
+                if effective_namespace is not None and metadata.get("namespace") not in {None, effective_namespace}:
+                    continue
+                if not metadata_matches_filter(metadata, filter):
+                    continue
+                relationships = None
+                if includeRelationships and isinstance(metadata.get("_relationships"), dict):
+                    relationships = {
+                        rel_type: NodeRelationship.from_dict(rel_value)
+                        if isinstance(rel_value, dict) and "node_id" in rel_value
+                        else rel_value
+                        for rel_type, rel_value in metadata["_relationships"].items()
+                    }
+                results.append(
+                    SearchResult(
+                        id=str(vector_id),
+                        metadata=metadata if includeMetadata else {},
+                        relationships=relationships,
+                    )
+                )
+            return results
+        except Exception as e:
+            raise StorageError(f"Pinecone fetch_by_ids failed: {str(e)}") from e
 
     async def list(
         self,

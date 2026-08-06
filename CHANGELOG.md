@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-06
+
+### Added
+- **Agentic Search v2** with typed search/expand actions, structured evidence coverage, missing-information and contradiction reporting, validated supporting source IDs, iteration traces, and explicit stop reasons.
+- **Global retrieval fusion** using reciprocal-rank fusion across semantic and keyword lists, followed by one standalone-question rerank and bounded diversity selection.
+- **Scoped relationship expansion** for NEXT/PREVIOUS-style traversal with hop/chunk budgets, cycle detection, provenance, and fail-closed namespace/filter enforcement across Qdrant, Pinecone, Chroma, and Weaviate.
+- **Evidence provenance** covering retrieval query/type, iteration, rank, original score, RRF score, and expansion parents.
+- **Post-generation answer verification** for citation indices, exact quotes, uncited claims, and an optional provider-neutral entailment hook.
+- **`AgenticSearchConfig`** for query, iteration, token, candidate, evidence, expansion, and no-progress budgets.
+
+### Changed
+- OpenAI evidence assessment now uses a strict structured response and fails closed on invalid booleans, missing fields, or provider failures.
+- Agentic results keep all legacy keys and add `answerable`, `stop_reason`, `assessment`, `provenance`, `iteration_trace`, `candidate_count`, `evidence_count`, and `expanded_chunk_ids`.
+- Deep Research keeps summaries for planning while preserving raw retrieved content for final evidence-backed synthesis.
+- CI and package-build checks now run for pull requests targeting `dev` as well as release branches.
+
+### Compatibility
+- Existing `BaseLLM` implementations remain compatible through the default `assess_evidence()` adapter, which delegates to `evaluate_sources()`.
+- Existing custom vector stores remain compatible because `fetch_by_ids()` is optional and safely returns no expansion results by default.
+
 ## [0.1.25] - 2026-07-09
 
 ### Fixed
@@ -286,7 +306,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example scripts for common use cases
 - API reference documentation
 
-[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.1.25...HEAD
+[Unreleased]: https://github.com/nuhatech/maktaba/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nuhatech/maktaba/compare/v0.1.25...v0.2.0
 [0.1.25]: https://github.com/nuhatech/maktaba/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/nuhatech/maktaba/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/nuhatech/maktaba/compare/v0.1.22...v0.1.23
@@ -312,5 +333,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.3]: https://github.com/nuhatech/maktaba/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/nuhatech/maktaba/compare/v0.1.0...v0.1.2
 [0.1.0]: https://github.com/nuhatech/maktaba/releases/tag/v0.1.0
-
 

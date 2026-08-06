@@ -185,6 +185,7 @@ class DeepResearchPipeline:
                 id=result.id,
                 metadata=result.metadata or {},
                 content=summary,
+                raw_content=content,
             ),
             usage,
         )
@@ -322,7 +323,7 @@ class DeepResearchPipeline:
         topic: str,
         results: SearchResultsCollection,
     ) -> Tuple[AsyncIterator[str], LLMUsage]:
-        formatted_results = results.to_string()
+        formatted_results = results.to_evidence_string()
         prompt = f"Research Topic: {topic}\n\nSearch Results:\n{formatted_results}"
         stream, usage = await self.model_config.answer.stream_text(
             system=self.prompts.answer_prompt,
