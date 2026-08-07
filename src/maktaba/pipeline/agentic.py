@@ -63,6 +63,9 @@ class AgenticQueryPipeline:
         namespace: Optional[str] = None,
         use_max_completion_tokens: bool = False,
         omit_temperature: bool = False,
+        llm_timeout_s: float = 30.0,
+        llm_reasoning_effort: Optional[str] = None,
+        llm_default_max_tokens: Optional[int] = None,
         config: Optional[AgenticSearchConfig] = None,
     ) -> None:
         self.embedder = embedder
@@ -83,6 +86,9 @@ class AgenticQueryPipeline:
                 prompts=prompts,
                 use_max_completion_tokens=use_max_completion_tokens,
                 omit_temperature=omit_temperature,
+                timeout_s=llm_timeout_s,
+                reasoning_effort=llm_reasoning_effort,
+                default_max_tokens=llm_default_max_tokens,
             )
 
     async def _execute_single_query(
@@ -182,6 +188,8 @@ class AgenticQueryPipeline:
             window,
             limit=max(config.assessment_limit, config.evidence_limit),
             max_per_document=config.max_per_document,
+            diversity_metadata_keys=config.diversity_metadata_keys,
+            max_per_diversity_group=config.max_per_diversity_group,
         )
 
     @staticmethod
@@ -457,6 +465,8 @@ class AgenticQueryPipeline:
             ranked_evidence or fused_candidates,
             limit=runtime.evidence_limit,
             max_per_document=runtime.max_per_document,
+            diversity_metadata_keys=runtime.diversity_metadata_keys,
+            max_per_diversity_group=runtime.max_per_diversity_group,
         )
         formatted = format_with_citations(final_results, top_k=len(final_results))
         formatted.update(

@@ -49,6 +49,8 @@ class OpenAILLM(BaseLLM):
         prompts: Optional[AgenticPrompts] = None,
         use_max_completion_tokens: bool = False,
         omit_temperature: bool = False,
+        reasoning_effort: Optional[str] = None,
+        default_max_tokens: Optional[int] = None,
     ) -> None:
         """
         Initialize OpenAI LLM.
@@ -65,7 +67,14 @@ class OpenAILLM(BaseLLM):
             omit_temperature: Omit the ``temperature`` parameter from API calls.
                 Required for reasoning models (o1, o3, gpt-5-nano, etc.) that
                 only support the default temperature value.
+            reasoning_effort: Optional OpenAI reasoning effort (for example,
+                ``minimal`` or ``low``). Omitted by default for compatibility.
+            default_max_tokens: Optional token cap used when a completion call
+                does not provide its own ``max_tokens`` value. Explicit values
+                passed by callers always take precedence.
         """
+        if default_max_tokens is not None and default_max_tokens <= 0:
+            raise ValueError("default_max_tokens must be greater than zero")
         self.api_key = api_key
         self.model = model
         self.temperature = temperature
@@ -73,6 +82,8 @@ class OpenAILLM(BaseLLM):
         self.prompts = prompts or default_prompts()
         self.use_max_completion_tokens = use_max_completion_tokens
         self.omit_temperature = omit_temperature
+        self.reasoning_effort = reasoning_effort
+        self.default_max_tokens = default_max_tokens
         self._logger = get_logger("maktaba.llm.openai")
 
         # Lazy client initialization
@@ -108,10 +119,19 @@ class OpenAILLM(BaseLLM):
         is omitted entirely (some models reject ``null``).  When a value is
         provided the key name depends on :attr:`use_max_completion_tokens`.
         """
-        if max_tokens is None:
+        effective_max_tokens = (
+            max_tokens if max_tokens is not None else self.default_max_tokens
+        )
+        if effective_max_tokens is None:
             return {}
         key = "max_completion_tokens" if self.use_max_completion_tokens else "max_tokens"
-        return {key: max_tokens}
+        return {key: effective_max_tokens}
+
+    def _reasoning_kwargs(self) -> Dict[str, Any]:
+        """Build the optional reasoning-control argument for OpenAI calls."""
+        if self.reasoning_effort is None:
+            return {}
+        return {"reasoning_effort": self.reasoning_effort}
 
     def _format_chat_history(self, messages: List[Tuple[str, str]]) -> str:
         """Format chat history as text."""
@@ -146,6 +166,7 @@ class OpenAILLM(BaseLLM):
                 ],
                 **self._temperature_kwargs(temperature),
                 **self._token_limit_kwargs(max_tokens),
+                **self._reasoning_kwargs(),
             )
 
             usage = LLMUsage(
@@ -185,6 +206,7 @@ class OpenAILLM(BaseLLM):
                 ],
                 **self._temperature_kwargs(temperature),
                 **self._token_limit_kwargs(max_tokens),
+                **self._reasoning_kwargs(),
                 response_format={"type": "json_object"},
             )
 
@@ -226,6 +248,7 @@ class OpenAILLM(BaseLLM):
                 ],
                 **self._temperature_kwargs(temperature),
                 **self._token_limit_kwargs(max_tokens),
+                **self._reasoning_kwargs(),
                 stream=True,
             )
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from typing import List, Tuple
 
 import pytest
@@ -144,6 +145,23 @@ def test_span_verification_maps_whitespace_to_original_text():
     assert source.text[result.span.start_offset : result.span.end_offset] == result.span.text
 
 
+def test_span_verification_maps_custom_normalisation_to_original_text():
+    source = SearchResult(id="book#1", metadata={"text": "قال: الإِخْلَاصُ أساسُ العمل."})
+
+    def strip_marks(character: str) -> str:
+        return "" if unicodedata.category(character).startswith(("M", "P")) else character
+
+    result = verify_evidence_span(
+        CollectionCandidate(source_id="book#1", text="قال الإخلاص أساس العمل"),
+        [source],
+        normalizer=strip_marks,
+    )
+
+    assert result.valid is True
+    assert result.span is not None
+    assert result.span.text == "قال: الإِخْلَاصُ أساسُ العمل"
+
+
 def test_span_verification_rejects_unknown_or_invented_text():
     source = SearchResult(id="book#1", metadata={"text": "Only grounded text exists here."})
     unknown = verify_evidence_span(
@@ -202,6 +220,7 @@ async def test_collection_returns_partial_diagnostics_without_leaking_invalid_it
     assert result.complete is False
     assert result.items == []
     assert result.rejected_candidates[0].reason == "span_not_in_source"
+    assert result.diagnostics["rejection_counts"] == {"span_not_in_source": 1}
     assert result.stop_reason == "iteration_limit_reached"
 
 
