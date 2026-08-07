@@ -282,6 +282,59 @@ def test_openai_llm_client_unavailable():
 
 
 @pytest.mark.asyncio
+async def test_openai_llm_applies_reasoning_and_default_completion_limit():
+    """Provider controls are applied without changing legacy defaults."""
+    with patch("openai.AsyncOpenAI") as MockOpenAI:
+        mock_client = AsyncMock()
+        MockOpenAI.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.usage.prompt_tokens = 10
+        mock_response.usage.completion_tokens = 5
+        mock_response.choices = [
+            MagicMock(message=MagicMock(content=json.dumps({"ok": True})))
+        ]
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        llm = OpenAILLM(
+            api_key="test-key",
+            use_max_completion_tokens=True,
+            omit_temperature=True,
+            reasoning_effort="minimal",
+            default_max_tokens=2048,
+        )
+        await llm.complete_json(system="system", prompt="prompt")
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert kwargs["reasoning_effort"] == "minimal"
+        assert kwargs["max_completion_tokens"] == 2048
+        assert "max_tokens" not in kwargs
+        assert "temperature" not in kwargs
+
+
+@pytest.mark.asyncio
+async def test_openai_llm_explicit_completion_limit_overrides_default():
+    with patch("openai.AsyncOpenAI") as MockOpenAI:
+        mock_client = AsyncMock()
+        MockOpenAI.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.usage.prompt_tokens = 1
+        mock_response.usage.completion_tokens = 1
+        mock_response.choices = [MagicMock(message=MagicMock(content="ok"))]
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        llm = OpenAILLM(api_key="test-key", default_max_tokens=2048)
+        await llm.complete_text(system="system", prompt="prompt", max_tokens=128)
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert kwargs["max_tokens"] == 128
+
+
+def test_openai_llm_rejects_invalid_default_completion_limit():
+    with pytest.raises(ValueError, match="greater than zero"):
+        OpenAILLM(api_key="test-key", default_max_tokens=0)
+
+
+@pytest.mark.asyncio
 async def test_openai_llm_usage_tracking_accuracy():
     """Test token usage tracking matches API response exactly."""
     with patch("openai.AsyncOpenAI") as MockOpenAI:

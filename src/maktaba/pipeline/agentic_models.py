@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Tuple
 
 QueryType = Literal["semantic", "keyword"]
 ActionType = Literal["search", "expand"]
@@ -292,6 +292,8 @@ class AgenticSearchConfig:
     max_expanded_chunks: int = 8
     no_progress_patience: int = 1
     max_per_document: int = 4
+    diversity_metadata_keys: Tuple[str, ...] = ()
+    max_per_diversity_group: int = 1
 
     def __post_init__(self) -> None:
         positive = {
@@ -307,6 +309,7 @@ class AgenticSearchConfig:
             "evidence_limit": self.evidence_limit,
             "rrf_k": self.rrf_k,
             "max_per_document": self.max_per_document,
+            "max_per_diversity_group": self.max_per_diversity_group,
         }
         invalid = [name for name, value in positive.items() if value <= 0]
         if invalid:

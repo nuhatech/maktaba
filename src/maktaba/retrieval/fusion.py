@@ -54,17 +54,30 @@ def select_diverse_results(
     *,
     limit: int,
     max_per_document: int = 4,
+    diversity_metadata_keys: Sequence[str] = (),
+    max_per_diversity_group: int = 1,
     duplicate_threshold: float = 0.94,
 ) -> List[SearchResult]:
-    """Remove near duplicates and bound domination by a single document."""
+    """Remove near duplicates and bound document or metadata domination."""
+    if max_per_diversity_group <= 0:
+        raise ValueError("max_per_diversity_group must be greater than zero")
     selected: List[SearchResult] = []
     selected_tokens: List[set[str]] = []
     document_counts: Dict[str, int] = {}
+    diversity_counts: Dict[Tuple[str, ...], int] = {}
 
     for result in results:
         if len(selected) >= limit:
             break
         if document_counts.get(result.document_id, 0) >= max_per_document:
+            continue
+        diversity_group = tuple(
+            str(result.metadata.get(key, "")) for key in diversity_metadata_keys
+        )
+        if (
+            diversity_group
+            and diversity_counts.get(diversity_group, 0) >= max_per_diversity_group
+        ):
             continue
 
         tokens = set(_TOKEN_PATTERN.findall((result.text or "").lower()))
@@ -81,5 +94,7 @@ def select_diverse_results(
         selected.append(result)
         selected_tokens.append(tokens)
         document_counts[result.document_id] = document_counts.get(result.document_id, 0) + 1
+        if diversity_group:
+            diversity_counts[diversity_group] = diversity_counts.get(diversity_group, 0) + 1
 
     return selected

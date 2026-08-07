@@ -6,7 +6,7 @@ import unicodedata
 from collections import Counter
 from typing import Any, Dict, List, Sequence, Tuple, Union
 
-from ..citation.spans import verify_evidence_span
+from ..citation.spans import SpanNormalizer, verify_evidence_span
 from ..collection_models import (
     CollectionCandidate,
     CollectionGoal,
@@ -29,7 +29,13 @@ def _canonical_text(value: str) -> str:
 class CollectionEvidenceAssessor:
     """Extract, verify, accumulate, and plan toward a collection goal."""
 
-    def __init__(self, goal: CollectionGoal, *, max_rejected_diagnostics: int = 100) -> None:
+    def __init__(
+        self,
+        goal: CollectionGoal,
+        *,
+        max_rejected_diagnostics: int = 100,
+        span_normalizer: SpanNormalizer | None = None,
+    ) -> None:
         self.goal = goal
         self.accepted_items: List[EvidenceSpan] = []
         self.rejected_candidates: List[RejectedCollectionCandidate] = []
@@ -37,6 +43,7 @@ class CollectionEvidenceAssessor:
         self._document_counts: Counter[str] = Counter()
         self._group_counts: Counter[Tuple[str, ...]] = Counter()
         self._max_rejected_diagnostics = max_rejected_diagnostics
+        self._span_normalizer = span_normalizer
 
     def _reject(self, candidate: CollectionCandidate | None, reason: str) -> None:
         if len(self.rejected_candidates) >= self._max_rejected_diagnostics:
@@ -63,6 +70,7 @@ class CollectionEvidenceAssessor:
             source_results,
             min_characters=self.goal.min_characters,
             require_exact_span=self.goal.require_exact_span,
+            normalizer=self._span_normalizer,
         )
         if not verification.valid or verification.span is None:
             self._reject(candidate, verification.reason or "invalid_source_span")
@@ -150,8 +158,14 @@ class CollectionEvidenceAssessor:
 class AgenticCollectionPipeline:
     """Collect verified exact spans using a configured Agentic Query pipeline."""
 
-    def __init__(self, search_pipeline: AgenticQueryPipeline) -> None:
+    def __init__(
+        self,
+        search_pipeline: AgenticQueryPipeline,
+        *,
+        span_normalizer: SpanNormalizer | None = None,
+    ) -> None:
         self.search_pipeline = search_pipeline
+        self.span_normalizer = span_normalizer
 
     @staticmethod
     def _with_goal(messages: List[CollectionMessage], goal: CollectionGoal) -> List[CollectionMessage]:
@@ -179,7 +193,10 @@ class AgenticCollectionPipeline:
         **search_kwargs: Any,
     ) -> CollectionResult:
         """Run collection and return verified items plus bounded diagnostics."""
-        assessor = CollectionEvidenceAssessor(goal)
+        assessor = CollectionEvidenceAssessor(
+            goal,
+            span_normalizer=self.span_normalizer,
+        )
         result = await self.search_pipeline.agentic_search(
             messages=self._with_goal(messages, goal),
             evidence_assessor=assessor,
@@ -204,6 +221,9 @@ class AgenticCollectionPipeline:
             diagnostics={
                 "candidate_count": int(result.get("candidate_count", 0)),
                 "evidence_count": int(result.get("evidence_count", 0)),
+                "rejection_counts": dict(
+                    Counter(item.reason for item in assessor.rejected_candidates)
+                ),
                 "expanded_chunk_ids": list(result.get("expanded_chunk_ids", [])),
                 "assessment": result.get("assessment"),
                 "iteration_trace": list(result.get("iteration_trace", [])),

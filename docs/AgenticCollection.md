@@ -19,7 +19,7 @@ search = AgenticQueryPipeline(
     reranker=reranker,
     llm=llm,
 )
-collector = AgenticCollectionPipeline(search)
+collector = AgenticCollectionPipeline(search, span_normalizer=my_optional_normalizer)
 
 result = await collector.collect(
     [("user", "Collect five directly relevant passages")],
@@ -37,6 +37,8 @@ result = await collector.collect(
         max_iterations=4,
         max_total_queries=30,
         token_budget=8_000,
+        diversity_metadata_keys=("author_id",),
+        max_per_diversity_group=1,
     ),
 )
 ```
@@ -50,7 +52,8 @@ For each Agentic Search iteration, the collection objective:
 1. receives the globally fused and reranked evidence window;
 2. asks the provider for exact-span candidates;
 3. rejects unknown source IDs and text absent from the claimed source;
-4. maps whitespace-only variations back to the original source slice;
+4. maps whitespace-only variations, and optional application-approved
+   normalisation variants, back to the original source slice;
 5. deduplicates and applies document/metadata diversity limits;
 6. stops when the verified target count is reached;
 7. otherwise asks for bounded search or PREVIOUS/NEXT expansion actions.
@@ -69,7 +72,10 @@ Applications can also pass their own objective-specific `EvidenceAssessor` to `A
 - The extractor cannot invent filters, namespaces, or source IDs.
 - Candidate attributes are untrusted until the application validates them.
 - The displayed exact span should always use `EvidenceSpan.text`, not generated candidate text.
-- Whitespace tolerance does not normalize or rewrite letters; it only locates the corresponding original slice.
+- The built-in whitespace tolerance never rewrites letters. A custom
+  `span_normalizer` should remove only domain-approved orthographic or
+  formatting variants; accepted output still comes byte-for-byte from the
+  original source slice.
 - Partial verified results are preferable to filling a target with unsupported items.
 - Private text should not be copied into logs or analytics traces.
 

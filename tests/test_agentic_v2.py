@@ -17,7 +17,7 @@ from maktaba.pipeline.agentic_models import (
     EvidenceItem,
     RetrievalAction,
 )
-from maktaba.retrieval.fusion import reciprocal_rank_fusion
+from maktaba.retrieval.fusion import reciprocal_rank_fusion, select_diverse_results
 from maktaba.storage.base import BaseVectorStore
 
 
@@ -154,6 +154,35 @@ def test_reciprocal_rank_fusion_records_cross_query_provenance():
     assert fused[0].id == "shared"
     assert provenance["shared"].queries == ["question a", "question b"]
     assert provenance["shared"].ranks == [1, 2]
+
+
+def test_evidence_selection_can_diversify_by_metadata():
+    results = [
+        SearchResult(
+            id="a-1",
+            score=0.99,
+            metadata={"text": "first passage", "author": "author-a"},
+        ),
+        SearchResult(
+            id="a-2",
+            score=0.98,
+            metadata={"text": "second passage", "author": "author-a"},
+        ),
+        SearchResult(
+            id="b-1",
+            score=0.97,
+            metadata={"text": "third passage", "author": "author-b"},
+        ),
+    ]
+
+    selected = select_diverse_results(
+        results,
+        limit=3,
+        diversity_metadata_keys=("author",),
+        max_per_diversity_group=1,
+    )
+
+    assert [item.id for item in selected] == ["a-1", "b-1"]
 
 
 @pytest.mark.asyncio

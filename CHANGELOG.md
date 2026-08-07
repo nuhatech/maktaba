@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-07
+
+### Added
+- OpenAI reasoning-effort, request-timeout, and default completion-token controls for bounded agentic pipelines. Existing callers keep their current behavior unless they opt in.
+- Optional metadata-diverse evidence selection and aggregate collection rejection diagnostics, so domain integrations can surface varied sources before exact-span extraction.
+- An optional application-supplied span normalizer that maps formatting or script variants back to the exact original source slice before accepting a collection item.
+
 ## [0.3.0] - 2026-08-06
 
 ### Added
