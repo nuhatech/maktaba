@@ -25,7 +25,13 @@ pipeline = AgenticQueryPipeline(
     store=store,
     keyword_store=keyword_store,
     reranker=reranker,
-    llm=llm,
+    llm_api_key="...",
+    llm_model="gpt-5-nano",
+    use_max_completion_tokens=True,
+    omit_temperature=True,
+    llm_timeout_s=60,
+    llm_reasoning_effort="minimal",
+    llm_default_max_tokens=4096,
 )
 
 result = await pipeline.agentic_search(
@@ -43,9 +49,15 @@ result = await pipeline.agentic_search(
         evidence_limit=15,
         max_expansion_hops=1,
         max_expanded_chunks=8,
+        diversity_metadata_keys=("author_id",),
+        max_per_diversity_group=1,
     ),
 )
 ```
+
+The OpenAI request controls are optional and backward compatible. They are
+useful for reasoning models in bounded structured steps: an explicit caller
+`max_tokens` still overrides `llm_default_max_tokens` for that call.
 
 Always gate answer generation on `result["answerable"]`. Retrieved context may still be useful when this is false, but Maktaba is explicitly reporting that the evidence audit did not establish sufficient support.
 
