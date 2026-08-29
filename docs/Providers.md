@@ -10,3 +10,5 @@ Vector Stores
 
 Rerankers
 - CohereReranker with offline heuristic by default
+- VoyageReranker (`rerank-2.5`) with API-by-key and deterministic fallback
+- ZeroEntropyReranker with offline heuristic fallback
