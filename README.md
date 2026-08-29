@@ -59,13 +59,13 @@ pip install "maktaba[all]"
 from maktaba.pipeline import QueryPipeline
 from maktaba.embedding import OpenAIEmbedder
 from maktaba.storage import QdrantStore
-from maktaba.reranking import CohereReranker
+from maktaba.reranking import VoyageReranker
 
 # Create pipeline
 pipeline = QueryPipeline(
     embedder=OpenAIEmbedder(api_key="..."),
     vector_store=QdrantStore(url="http://localhost:6333", collection_name="docs"),
-    reranker=CohereReranker(api_key="...")
+    reranker=VoyageReranker(api_key="...")
 )
 
 # Search with automatic reranking and citation formatting
